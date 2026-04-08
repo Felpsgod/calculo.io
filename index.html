@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel MetalParts - Multi-Importação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+        .table-input input { width: 100%; border: none; background: transparent; outline: none; }
+        .table-input td { padding: 8px 12px; border: 1px solid #e2e8f0; }
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; cursor: pointer; }
+        .drop-zone:hover, .drop-zone.drag-over { border-color: #2563eb; background-color: #eff6ff; }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .badge-file { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+
+    <div class="max-w-[1440px] mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-t-3xl shadow-sm border-b border-slate-100">
+            <div>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
+                    <span class="bg-blue-600 text-white px-2 py-1 rounded-lg">MP</span> Painel de Dissídio
+                </h1>
+                <p class="text-slate-500 text-sm mt-1 font-medium">Multi-Importação: Relatórios Questor 97-2003</p>
+            </div>
+            <div class="flex gap-6 mt-4 md:mt-0 items-center">
+                <div id="fileCounter" class="hidden text-right">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">Arquivos Lidos</p>
+                    <span class="badge-file" id="countValue">0</span>
+                </div>
+                <div class="bg-slate-100 p-3 px-6 rounded-2xl border border-slate-200 shadow-inner">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 text-center">Dias no Mês (Divisor)</label>
+                    <input type="number" id="configDiasMes" value="31" class="bg-transparent font-black text-xl w-full text-center outline-none text-blue-700" oninput="recalcularTudo()">
+                </div>
+            </div>
+        </header>
+
+        <div class="bg-white p-8 shadow-md border-x border-slate-100">
+            <div id="dropZone" class="drop-zone rounded-3xl h-36 flex flex-col items-center justify-center group">
+                <div class="bg-blue-50 p-4 rounded-full group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </div>
+                <p class="text-slate-700 font-bold mt-4">Selecionar Múltiplos Arquivos</p>
+                <p class="text-slate-400 text-xs mt-1">Clique para selecionar ou arraste vários arquivos XLS de uma vez</p>
+                <input type="file" id="fileInput" class="hidden" accept=".xls,.xlsx,.csv" multiple>
+            </div>
+        </div>
+
+        <section id="resultsSection" class="hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div class="bg-white shadow-2xl rounded-b-3xl overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left border-collapse table-input" id="resultTable">
+                        <thead class="bg-slate-900 text-slate-200 font-bold uppercase text-[10px] tracking-widest">
+                            <tr>
+                                <td class="p-4 w-[20%]">Funcionário</td>
+                                <td class="text-right p-4">Sal. Antigo</td>
+                                <td class="text-center p-4">Dias Trab.</td>
+                                <td class="text-right p-4">Sal. Novo</td>
+                                <td class="text-right p-4 bg-slate-800">DSR</td>
+                                <td class="text-right p-4 bg-slate-800">Extras</td>
+                                <td class="text-right p-4 text-blue-400">Vlr. Antigo</td>
+                                <td class="text-right p-4 text-blue-400">Vlr. Novo</td>
+                                <td class="text-right p-4 bg-emerald-600 text-white font-black">Diferença</td>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div class="p-8 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-200">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-slate-400 text-[11px] font-bold uppercase tracking-tighter">Resumo da Operação</span>
+                        <div class="flex gap-4">
+                            <p class="text-slate-600 font-medium text-sm"><b id="totalFunc">0</b> Funcionários encontrados</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <button onclick="limparTabela()" class="px-6 py-4 text-slate-400 font-bold hover:text-red-500 transition-colors uppercase text-xs tracking-widest">Limpar Tudo</button>
+                        <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-4 rounded-2xl font-black shadow-xl transition transform hover:-translate-y-1 active:scale-95 flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            EXPORTAR CONSOLIDADO
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Variáveis de estado global
+        let totalFilesProcessed = 0;
+        let listaGlobalFuncionarios = [];
+
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
+        dropZone.ondrop = (e) => { e.preventDefault(); processarArquivos(e.dataTransfer.files); };
+        fileInput.onchange = (e) => processarArquivos(e.target.files);
+
+        async function processarArquivos(files) {
+            if (!files || files.length === 0) return;
+            
+            totalFilesProcessed += files.length;
+            document.getElementById('fileCounter').classList.remove('hidden');
+            document.getElementById('countValue').innerText = totalFilesProcessed;
+
+            // Processa cada arquivo de forma assíncrona
+            for (let file of files) {
+                const data = await lerArquivo(file);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                
+                extrairDadosQuestor(rows);
+            }
+            
+            atualizarVisualizacao();
+        }
+
+        function lerArquivo(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(new Uint8Array(e.target.result));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function extrairDadosQuestor(rows) {
+            for (let i = 0; i < rows.length; i++) {
+                let rowStr = rows[i].join('|');
+                
+                if (rowStr.includes("Empr.:")) {
+                    let f = { nome: "", sAnt: 0, dTra: 0, sNov: 0, dsr: 0, extras: 0 };
+                    f.nome = rowStr.split("Empr.:")[1]?.split("|").filter(x => x.trim().length > 5)[0] || "Não identificado";
+
+                    // Scanner de blocos (linhas abaixo do nome)
+                    for (let j = i + 1; j < i + 12 && j < rows.length; j++) {
+                        let subRow = rows[j];
+                        let subStr = subRow.join('|');
+
+                        if (subStr.includes("Salário:")) {
+                            let sals = subRow.filter(c => /^\d+([.,]\d+)*$/.test(c.toString().replace('R$', '').trim()));
+                            if (sals.length >= 2) {
+                                f.sAnt = cleanNum(sals[0]);
+                                f.sNov = cleanNum(sals[sals.length - 1]);
+                            }
+                        }
+
+                        if (subStr.includes("DIAS") && !subStr.includes("DSR") && !subStr.includes("REFLEXO")) {
+                            let valDias = subRow.find(c => /^\d{1,2},00$/.test(c.toString().trim()));
+                            if (valDias) f.dTra = cleanNum(valDias);
+                        }
+
+                        if (subStr.includes("REFLEXO") || subStr.includes("DSR")) {
+                            let valDsr = subRow.find(c => /^\d+,\d{2}$/.test(c.toString().trim()) && cleanNum(c) > 0);
+                            if (valDsr) f.dsr = cleanNum(valDsr);
+                        }
+
+                        if (subStr.includes("EXTRAS")) {
+                            let valExt = subRow.find(c => /^\d+,\d{2}$/.test(c.toString().trim()) && cleanNum(c) > 0);
+                            if (valExt) f.extras = cleanNum(valExt);
+                        }
+                    }
+                    if (f.sAnt > 0) listaGlobalFuncionarios.push(f);
+                    i += 5; // Salto de segurança
+                }
+            }
+        }
+
+        function cleanNum(val) {
+            if (!val) return 0;
+            let n = val.toString().replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+            return parseFloat(n) || 0;
+        }
+
+        function formatBR(num) {
+            return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function atualizarVisualizacao() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ''; // Limpa para renderizar a lista consolidada
+            
+            const divDias = cleanNum(document.getElementById('configDiasMes').value) || 31;
+
+            listaGlobalFuncionarios.forEach(f => {
+                const vAnt = (f.sAnt / divDias) * f.dTra;
+                const vNov = ((f.sNov / divDias) * f.dTra) + f.dsr + f.extras;
+                const diff = vNov - vAnt;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-bold text-slate-800">${f.nome}</td>
+                    <td><input type="number" step="0.01" value="${f.sAnt.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
+                    <td><input type="number" step="1" value="${f.dTra}" class="text-center font-mono text-blue-600 font-bold w-full bg-transparent" oninput="recalcularTudo()"></td>
+                    <td><input type="number" step="0.01" value="${f.sNov.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
+                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.dsr.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
+                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.extras.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
+                    <td class="vAnt text-right font-mono bg-blue-50/20 p-4 text-slate-600">${formatBR(vAnt)}</td>
+                    <td class="vNov text-right font-mono bg-blue-50/20 p-4 text-slate-600">${formatBR(vNov)}</td>
+                    <td class="vDiff text-right font-mono font-black text-emerald-700 bg-emerald-50/50 p-4 text-base">${formatBR(diff)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('totalFunc').innerText = listaGlobalFuncionarios.length;
+            document.getElementById('resultsSection').classList.remove('hidden');
+        }
+
+        function recalcularTudo() {
+            const divDias = cleanNum(document.getElementById('configDiasMes').value) || 31;
+            
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const sAnt = cleanNum(inputs[0].value);
+                const dTra = cleanNum(inputs[1].value);
+                const sNov = cleanNum(inputs[2].value);
+                const dsr = cleanNum(inputs[3].value);
+                const ext = cleanNum(inputs[4].value);
+
+                const vAnt = (sAnt / divDias) * dTra;
+                const vNov = ((sNov / divDias) * dTra) + dsr + ext;
+                const diff = vNov - vAnt;
+
+                row.querySelector('.vAnt').innerText = formatBR(vAnt);
+                row.querySelector('.vNov').innerText = formatBR(vNov);
+                row.querySelector('.vDiff').innerText = formatBR(diff);
+            });
+        }
+
+        function exportarCSV() {
+            let csv = "\ufeffNome;SalarioAntigo;DiasTrab;SalarioNovo;DSR;Extras;ValorAntigo;ValorNovo;Diferenca\n";
+            
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                const nome = row.querySelector('td').innerText;
+                const inputs = Array.from(row.querySelectorAll('input')).map(i => cleanNum(i.value).toFixed(2).replace('.', ','));
+                const calcs = Array.from(row.querySelectorAll('.vAnt, .vNov, .vDiff')).map(td => td.innerText.replace(/\./g, ''));
+                
+                csv += `"${nome}";${inputs.join(';')};${calcs.join(';')}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `MetalParts_Consolidado_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.csv`;
+            link.click();
+        }
+
+        function limparTabela() {
+            listaGlobalFuncionarios = [];
+            totalFilesProcessed = 0;
+            document.getElementById('tableBody').innerHTML = '';
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('fileCounter').classList.add('hidden');
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
