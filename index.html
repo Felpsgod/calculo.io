@@ -3,68 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel MetalParts - Multi-Importação</title>
+    <title>Painel MetalParts - Conferência Questor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
-        .table-input input { width: 100%; border: none; background: transparent; outline: none; }
-        .table-input td { padding: 8px 12px; border: 1px solid #e2e8f0; }
-        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; cursor: pointer; }
+        .input-money { width: 100%; border: 1px solid transparent; background: transparent; outline: none; padding: 2px 4px; text-align: right; border-radius: 4px; transition: border 0.2s; font-weight: 600;}
+        .input-money:focus, .input-money:hover { border-color: #cbd5e1; background: white; }
+        .table-custom th { border-bottom: 2px solid #334155; }
+        .table-custom td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .drop-zone { border: 2px dashed #94a3b8; transition: all 0.2s; cursor: pointer; }
         .drop-zone:hover, .drop-zone.drag-over { border-color: #2563eb; background-color: #eff6ff; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .badge-file { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: bold; }
     </style>
 </head>
-<body class="bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+<body class="bg-slate-100 p-4 md:p-8 font-sans text-slate-900">
 
-    <div class="max-w-[1440px] mx-auto">
-        <header class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-t-3xl shadow-sm border-b border-slate-100">
+    <div class="max-w-[1600px] mx-auto">
+        <header class="bg-white p-6 rounded-t-3xl shadow-sm border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
                 <h1 class="text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
-                    <span class="bg-blue-600 text-white px-2 py-1 rounded-lg">MP</span> Painel de Dissídio
+                    <span class="bg-blue-600 text-white px-2 py-1 rounded-lg shadow-lg">MP</span> Dissídio Analítico
                 </h1>
-                <p class="text-slate-500 text-sm mt-1 font-medium">Multi-Importação e Arredondamento Contábil</p>
+                <p class="text-slate-500 text-sm mt-1 font-bold">Extração Direta: Extrato Questor (Azul vs Verde)</p>
             </div>
-            <div class="flex gap-6 mt-4 md:mt-0 items-center">
-                <div id="fileCounter" class="hidden text-right">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Arquivos Lidos</p>
-                    <span class="badge-file" id="countValue">0</span>
-                </div>
-                <div class="bg-slate-100 p-3 px-6 rounded-2xl border border-slate-200 shadow-inner">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 text-center flex items-center justify-center gap-1">
-                        Dias no Mês <span id="lblCompetencia" class="text-blue-500 normal-case bg-blue-100 px-1.5 py-0.5 rounded text-[9px] hidden">Auto</span>
-                    </label>
-                    <input type="number" id="configDiasMes" value="31" class="bg-transparent font-black text-xl w-full text-center outline-none text-blue-700" oninput="recalcularTudo()">
-                </div>
+            <div class="flex gap-4">
+                <span class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-full text-sm border border-slate-200">
+                    Funcionários Lidos: <span id="totalFunc" class="text-blue-700 text-lg ml-1">0</span>
+                </span>
             </div>
         </header>
 
-        <div class="bg-white p-8 shadow-md border-x border-slate-100">
-            <div id="dropZone" class="drop-zone rounded-3xl h-36 flex flex-col items-center justify-center group">
-                <div class="bg-blue-50 p-4 rounded-full group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                </div>
-                <p class="text-slate-700 font-bold mt-4">Selecionar Múltiplos Arquivos</p>
-                <p class="text-slate-400 text-xs mt-1">Clique ou arraste vários arquivos XLS de uma vez</p>
+        <section class="bg-white p-6 border-x border-slate-200">
+            <div id="dropZone" class="drop-zone rounded-2xl h-24 flex flex-col items-center justify-center group bg-slate-50">
+                <p class="text-slate-700 font-bold text-lg group-hover:text-blue-700 transition">📥 Importar Relatórios XLS (Múltiplos)</p>
+                <p class="text-slate-400 text-xs mt-1">Arraste os arquivos para cá ou clique para selecionar</p>
                 <input type="file" id="fileInput" class="hidden" accept=".xls,.xlsx,.csv" multiple>
             </div>
-        </div>
+        </section>
 
         <section id="resultsSection" class="hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div class="bg-white shadow-2xl rounded-b-3xl overflow-hidden border border-slate-200">
+            <div class="bg-white shadow-xl rounded-b-3xl overflow-hidden border border-slate-200">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left border-collapse table-input" id="resultTable">
-                        <thead class="bg-slate-900 text-slate-200 font-bold uppercase text-[10px] tracking-widest">
+                    <table class="w-full text-left border-collapse table-custom" id="resultTable">
+                        <thead class="bg-slate-800 text-white font-bold uppercase text-[10px] tracking-widest">
                             <tr>
-                                <td class="p-4 w-[20%]">Funcionário</td>
-                                <td class="text-right p-4">Sal. Antigo</td>
-                                <td class="text-center p-4">Dias Trab.</td>
-                                <td class="text-right p-4">Sal. Novo</td>
-                                <td class="text-right p-4 bg-slate-800">DSR</td>
-                                <td class="text-right p-4 bg-slate-800">Extras</td>
-                                <td class="text-right p-4 text-blue-400">Vlr. Antigo</td>
-                                <td class="text-right p-4 text-blue-400">Vlr. Novo</td>
-                                <td class="text-right p-4 bg-emerald-600 text-white font-black">Diferença</td>
+                                <th class="p-4 w-[20%]">Funcionário / Salários</th>
+                                <th class="p-4 w-[20%] bg-slate-700 border-l border-slate-600">1. Dias Normais</th>
+                                <th class="p-4 w-[20%] bg-slate-700 border-l border-slate-600">2. Horas Extras</th>
+                                <th class="p-4 w-[20%] bg-slate-700 border-l border-slate-600">3. Reflexo / DSR</th>
+                                <th class="p-4 w-[12%] bg-emerald-700 text-right border-l border-emerald-600">Diferença Total</th>
+                                <th class="p-4 w-[8%] text-center">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
@@ -72,28 +60,19 @@
                     </table>
                 </div>
 
-                <div class="p-8 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-200">
-                    <div class="flex flex-col gap-1">
-                        <span class="text-slate-400 text-[11px] font-bold uppercase tracking-tighter">Resumo da Operação</span>
-                        <div class="flex gap-4">
-                            <p class="text-slate-600 font-medium text-sm"><b id="totalFunc">0</b> Funcionários encontrados</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4">
-                        <button onclick="limparTabela()" class="px-6 py-4 text-slate-400 font-bold hover:text-red-500 transition-colors uppercase text-xs tracking-widest">Limpar Tudo</button>
-                        <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-4 rounded-2xl font-black shadow-xl transition transform hover:-translate-y-1 active:scale-95 flex items-center gap-3">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            EXPORTAR CONSOLIDADO
-                        </button>
-                    </div>
+                <div class="p-6 bg-slate-50 flex justify-between items-center border-t border-slate-200">
+                    <button onclick="limparTabela()" class="text-slate-500 hover:text-red-600 font-black text-xs uppercase tracking-wider transition">Limpar Tudo</button>
+                    <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-4 rounded-xl font-black shadow-lg transition transform hover:-translate-y-1 active:scale-95 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        EXPORTAR PARA O QUESTOR
+                    </button>
                 </div>
             </div>
         </section>
     </div>
 
     <script>
-        let totalFilesProcessed = 0;
-        let listaGlobalFuncionarios = [];
+        let listaGlobal = [];
 
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
@@ -105,200 +84,274 @@
         fileInput.onchange = (e) => processarArquivos(e.target.files);
 
         async function processarArquivos(files) {
-            if (!files || files.length === 0) return;
-            
-            totalFilesProcessed += files.length;
-            document.getElementById('fileCounter').classList.remove('hidden');
-            document.getElementById('countValue').innerText = totalFilesProcessed;
-
             for (let file of files) {
-                const data = await lerArquivo(file);
+                const data = await file.arrayBuffer();
                 const workbook = XLSX.read(data, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-                
-                detectarCompetencia(rows);
-                extrairDadosQuestor(rows);
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
+                extrairDados(rows);
             }
+            renderizar();
+        }
+
+        // Função "limpa-tudo" para pegar apenas os números de dinheiro do Questor
+        function parseMoney(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return null;
+            let str = val.toString().trim();
+            if (!/\d/.test(str)) return null; 
             
-            atualizarVisualizacao();
-        }
+            let cleaned = str.replace(/[PDR$\s]/gi, '').trim(); // Remove P (provento), D (desconto), R$
+            if (cleaned.includes(':') || cleaned.includes('/')) return null; // Ignora horas (0:11) e datas
 
-        function lerArquivo(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(new Uint8Array(e.target.result));
-                reader.readAsArrayBuffer(file);
-            });
-        }
-
-        function detectarCompetencia(rows) {
-            // Varre as primeiras 20 linhas procurando a data de competência
-            for (let i = 0; i < Math.min(20, rows.length); i++) {
-                let rowStr = rows[i].join(' ');
-                if (rowStr.includes("Competência:")) {
-                    // Tenta capturar o formato dd/mm/yyyy
-                    let match = rowStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-                    if (match) {
-                        let mes = parseInt(match[2]);
-                        let ano = parseInt(match[3]);
-                        
-                        // O dia '0' do próximo mês retorna o último dia do mês atual
-                        let diasNoMes = new Date(ano, mes, 0).getDate(); 
-                        
-                        document.getElementById('configDiasMes').value = diasNoMes;
-                        
-                        let lbl = document.getElementById('lblCompetencia');
-                        lbl.innerText = `Ref: ${match[2]}/${match[3]}`;
-                        lbl.classList.remove('hidden');
-                        return; // Achou, sai da função
-                    }
-                }
+            if (cleaned.includes(',') && cleaned.includes('.')) {
+                cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+            } else if (cleaned.includes(',')) {
+                cleaned = cleaned.replace(',', '.');
             }
+            let n = parseFloat(cleaned);
+            return isNaN(n) ? null : n;
         }
 
-        function extrairDadosQuestor(rows) {
+        // No bloco Azul (Antigo), o valor está no final da matriz
+        function getOldValue(arr) {
+            let nums = arr.map(parseMoney).filter(n => n !== null);
+            return nums.length > 0 ? nums[nums.length - 1] : 0;
+        }
+
+        // No bloco Verde (Novo), o valor está antes da diferença
+        function getNewValue(arr) {
+            let nums = arr.map(parseMoney).filter(n => n !== null);
+            if (nums.length >= 2) return nums[nums.length - 2];
+            if (nums.length === 1) return nums[0];
+            return 0;
+        }
+
+        function extrairDados(rows) {
             for (let i = 0; i < rows.length; i++) {
-                let rowStr = rows[i].join('|');
+                let rStr = rows[i].join('|');
                 
-                if (rowStr.includes("Empr.:")) {
-                    let f = { nome: "", sAnt: 0, dTra: 0, sNov: 0, dsr: 0, extras: 0 };
-                    f.nome = rowStr.split("Empr.:")[1]?.split("|").filter(x => x.trim().length > 5)[0] || "Não identificado";
+                if (rStr.includes("Empr.:")) {
+                    let f = { 
+                        nome: rStr.split("Empr.:")[1]?.split("|").filter(x => x.trim().length > 5)[0] || "Sem Nome",
+                        sAnt: 0, sNov: 0, 
+                        baseAnt: 0, baseNov: 0, 
+                        extAnt: 0, extNov: 0, 
+                        dsrAnt: 0, dsrNov: 0 
+                    };
 
-                    for (let j = i + 1; j < i + 12 && j < rows.length; j++) {
-                        let subRow = rows[j];
-                        let subStr = subRow.join('|');
+                    // Varre as linhas debaixo do nome do funcionário
+                    for (let j = i + 1; j < Math.min(i + 20, rows.length); j++) {
+                        let r = rows[j];
+                        let rUpper = r.join(' ').toUpperCase();
+                        
+                        if (rUpper.includes("EMPR.:")) break; // Chegou no próximo funcionário
 
-                        if (subStr.includes("Salário:")) {
-                            let sals = subRow.filter(c => /^\d+([.,]\d+)*$/.test(c.toString().replace('R$', '').trim()));
-                            if (sals.length >= 2) {
-                                f.sAnt = cleanNum(sals[0]);
-                                f.sNov = cleanNum(sals[sals.length - 1]);
+                        // 1. Pega os Salários
+                        let sals = [];
+                        for (let k = 0; k < r.length; k++) {
+                            if (typeof r[k] === 'string' && r[k].toUpperCase().includes('SALÁRIO:')) {
+                                for (let m = k + 1; m < r.length; m++) {
+                                    let n = parseMoney(r[m]);
+                                    if (n !== null && n < 100000) { sals.push(n); break; }
+                                }
+                            }
+                        }
+                        if (sals.length >= 1 && f.sAnt === 0) f.sAnt = sals[0];
+                        if (sals.length >= 2 && f.sNov === 0) f.sNov = sals[1];
+
+                        // 2. Acha a coluna Descrição (Ex: DIAS NORMAIS, HORAS EXTRAS 50%)
+                        let centerTextIdx = -1;
+                        for (let k = r.length - 1; k >= 0; k--) {
+                            if (typeof r[k] === 'string') {
+                                let strClean = r[k].trim().toUpperCase();
+                                if (strClean.length > 5 && !strClean.includes("EMPR.:") && /[A-Z]{4,}/.test(strClean)) {
+                                    if (!strClean.includes("/") && !strClean.includes("SALÁRIO:")) {
+                                        centerTextIdx = k; break;
+                                    }
+                                }
                             }
                         }
 
-                        if (subStr.includes("DIAS") && !subStr.includes("DSR") && !subStr.includes("REFLEXO")) {
-                            let valDias = subRow.find(c => /^\d{1,2},00$/.test(c.toString().trim()));
-                            if (valDias) f.dTra = cleanNum(valDias);
-                        }
+                        // 3. Divide a linha e extrai os valores (Azul x Verde)
+                        if (centerTextIdx !== -1) {
+                            let s = r[centerTextIdx].toUpperCase();
+                            
+                            let leftPart = r.slice(0, centerTextIdx);
+                            let rightPart = r.slice(centerTextIdx + 1);
+                            
+                            let oldVal = getOldValue(leftPart);
+                            let newVal = getNewValue(rightPart);
 
-                        if (subStr.includes("REFLEXO") || subStr.includes("DSR")) {
-                            let valDsr = subRow.find(c => /^\d+,\d{2}$/.test(c.toString().trim()) && cleanNum(c) > 0);
-                            if (valDsr) f.dsr = cleanNum(valDsr);
-                        }
-
-                        if (subStr.includes("EXTRAS")) {
-                            let valExt = subRow.find(c => /^\d+,\d{2}$/.test(c.toString().trim()) && cleanNum(c) > 0);
-                            if (valExt) f.extras = cleanNum(valExt);
+                            if (oldVal > 0 || newVal > 0) {
+                                if (s.includes("DIAS NORMAIS") || s.includes("SALARIO")) {
+                                    f.baseAnt += oldVal; f.baseNov += newVal;
+                                } else if (s.includes("EXTRA") && !s.includes("REFLEXO")) {
+                                    f.extAnt += oldVal; f.extNov += newVal;
+                                } else if (s.includes("REFLEXO") || s.includes("DSR")) {
+                                    // Subtrai se for Desconto de DSR, soma se for Reflexo de Extras
+                                    if (s.includes("DESCONTO")) { f.dsrAnt -= oldVal; f.dsrNov -= newVal; }
+                                    else { f.dsrAnt += oldVal; f.dsrNov += newVal; }
+                                }
+                            }
                         }
                     }
-                    if (f.sAnt > 0) listaGlobalFuncionarios.push(f);
-                    i += 5;
+                    if (f.sAnt > 0 || f.baseAnt > 0) listaGlobal.push(f);
+                    i += 5; 
                 }
             }
-        }
-
-        function cleanNum(val) {
-            if (!val) return 0;
-            let n = val.toString().replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-            return parseFloat(n) || 0;
-        }
-
-        // Função de formatação para exibir o texto nos campos sem bugs no input number
-        function formatInput(element) {
-            let val = parseFloat(element.value);
-            if (!isNaN(val)) {
-                element.value = val.toFixed(2);
-            }
-            recalcularTudo();
         }
 
         function formatBR(num) {
             return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function atualizarVisualizacao() {
+        function renderizar() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = ''; 
+            tbody.innerHTML = '';
             
-            const divDias = cleanNum(document.getElementById('configDiasMes').value) || 31;
-
-            listaGlobalFuncionarios.forEach(f => {
-                // Cálculo Contábil Exato no processamento inicial
-                const vAnt = Math.round(((f.sAnt / divDias) * f.dTra) * 100) / 100;
-                const vNovProp = Math.round(((f.sNov / divDias) * f.dTra) * 100) / 100;
-                const vNov = vNovProp + f.dsr + f.extras;
-                const diff = Math.round((vNov - vAnt) * 100) / 100;
-
+            listaGlobal.forEach((f) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.className = "hover:bg-slate-50 transition group";
                 tr.innerHTML = `
-                    <td class="p-4 font-bold text-slate-800">${f.nome}</td>
-                    <td><input type="number" step="0.01" value="${f.sAnt.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
-                    <td><input type="number" step="1" value="${f.dTra}" class="text-center font-mono text-blue-600 font-bold w-full bg-transparent" onchange="formatInput(this)"></td>
-                    <td><input type="number" step="0.01" value="${f.sNov.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
-                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.dsr.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
-                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.extras.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
-                    <td class="vAnt text-right font-mono bg-blue-50/20 p-4 text-slate-600">${formatBR(vAnt)}</td>
-                    <td class="vNov text-right font-mono bg-blue-50/20 p-4 text-slate-600">${formatBR(vNov)}</td>
-                    <td class="vDiff text-right font-mono font-black text-emerald-700 bg-emerald-50/50 p-4 text-base">${formatBR(diff)}</td>
+                    <td class="border-r border-slate-100">
+                        <div class="font-black text-slate-800 text-[11px] mb-3 uppercase truncate" title="${f.nome}">${f.nome}</div>
+                        <div class="flex justify-between items-center text-[11px] mb-1">
+                            <span class="text-slate-400 font-bold">Sal. Antigo:</span>
+                            <div class="flex items-center text-slate-600">R$ <input type="number" step="0.01" value="${f.sAnt.toFixed(2)}" class="input-money sAnt" oninput="recalcularTudo()"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px]">
+                            <span class="text-slate-400 font-bold">Sal. Novo:</span>
+                            <div class="flex items-center text-emerald-600 font-bold">R$ <input type="number" step="0.01" value="${f.sNov.toFixed(2)}" class="input-money sNov" oninput="recalcularTudo()"></div>
+                        </div>
+                    </td>
+
+                    <td class="border-r border-slate-100 bg-slate-50/30">
+                        <div class="flex justify-between items-center text-[11px] mb-1">
+                            <span class="text-blue-500 font-bold">Vlr Antigo:</span>
+                            <div class="flex items-center text-blue-700">R$ <input type="number" step="0.01" value="${f.baseAnt.toFixed(2)}" class="input-money baseAnt" oninput="recalcularTudo()"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] mb-2">
+                            <span class="text-emerald-500 font-bold">Vlr Novo:</span>
+                            <div class="flex items-center text-emerald-700">R$ <input type="number" step="0.01" value="${f.baseNov.toFixed(2)}" class="input-money baseNov" oninput="recalcularTudo()"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200">
+                            <span class="text-slate-400 font-bold">Diferença:</span>
+                            <span class="diffBase font-black text-slate-800">R$ 0,00</span>
+                        </div>
+                    </td>
+
+                    <td class="border-r border-slate-100 bg-slate-50/30">
+                        <div class="flex justify-between items-center text-[11px] mb-1">
+                            <span class="text-blue-500 font-bold">Vlr Antigo:</span>
+                            <div class="flex items-center text-blue-700">R$ <input type="number" step="0.01" value="${f.extAnt.toFixed(2)}" class="input-money extAnt" oninput="recalcularTudo()"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] mb-2">
+                            <span class="text-emerald-500 font-bold">Vlr Novo:</span>
+                            <div class="flex items-center text-emerald-700">R$ <input type="number" step="0.01" value="${f.extNov.toFixed(4)}" class="input-money extNov" oninput="recalcularTudo()"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200">
+                            <span class="text-slate-400 font-bold">Diferença:</span>
+                            <span class="diffExt font-black text-slate-800">R$ 0,00</span>
+                        </div>
+                    </td>
+
+                    <td class="border-r border-slate-100 bg-slate-50/30">
+                        <div class="flex justify-between items-center text-[11px] mb-1">
+                            <span class="text-blue-500 font-bold">Vlr Antigo:</span>
+                            <div class="flex items-center text-blue-700">R$ <input type="number" step="0.01" value="${f.dsrAnt.toFixed(2)}" class="input-money dsrAnt" oninput="recalcularTudo()"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] mb-2">
+                            <span class="text-emerald-500 font-bold">Vlr Novo:</span>
+                            <div class="flex items-center text-emerald-700">R$ <input type="number" step="0.01" value="${f.dsrNov.toFixed(4)}" class="input-money dsrNov" oninput="recalcularTudo()"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200">
+                            <span class="text-slate-400 font-bold">Diferença:</span>
+                            <span class="diffDsr font-black text-slate-800">R$ 0,00</span>
+                        </div>
+                    </td>
+
+                    <td class="bg-emerald-50/50 text-right align-middle">
+                        <div class="vDiff font-black text-emerald-600 text-lg">R$ 0,00</div>
+                    </td>
+
+                    <td class="text-center align-middle">
+                        <button onclick="removerLinha(this)" title="Excluir Funcionário" class="bg-white border border-red-200 text-red-500 hover:bg-red-500 hover:text-white rounded-lg p-2 shadow-sm transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('totalFunc').innerText = listaGlobalFuncionarios.length;
+            
             document.getElementById('resultsSection').classList.remove('hidden');
+            atualizarContador();
+            recalcularTudo();
+        }
+
+        function removerLinha(btn) {
+            btn.closest('tr').remove();
+            atualizarContador();
+        }
+
+        function atualizarContador() {
+            document.getElementById('totalFunc').innerText = document.querySelectorAll('#tableBody tr').length;
         }
 
         function recalcularTudo() {
-            const divDias = cleanNum(document.getElementById('configDiasMes').value) || 31;
-            
+            const getVal = (row, cls) => parseFloat(row.querySelector('.' + cls).value) || 0;
+
             document.querySelectorAll('#tableBody tr').forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                const sAnt = cleanNum(inputs[0].value);
-                const dTra = cleanNum(inputs[1].value);
-                const sNov = cleanNum(inputs[2].value);
-                const dsr = cleanNum(inputs[3].value);
-                const ext = cleanNum(inputs[4].value);
+                // Captura a edição na tela
+                const baseAnt = getVal(row, 'baseAnt'), baseNov = getVal(row, 'baseNov');
+                const extAnt = getVal(row, 'extAnt'), extNov = getVal(row, 'extNov');
+                const dsrAnt = getVal(row, 'dsrAnt'), dsrNov = getVal(row, 'dsrNov');
 
-                // Cálculo Contábil Exato (Arredonda cada etapa para evitar dízimas)
-                const vAnt = Math.round(((sAnt / divDias) * dTra) * 100) / 100;
-                const vNovProp = Math.round(((sNov / divDias) * dTra) * 100) / 100;
-                const vNov = Math.round((vNovProp + dsr + ext) * 100) / 100;
-                const diff = Math.round((vNov - vAnt) * 100) / 100;
-
-                row.querySelector('.vAnt').innerText = formatBR(vAnt);
-                row.querySelector('.vNov').innerText = formatBR(vNov);
-                row.querySelector('.vDiff').innerText = formatBR(diff);
+                // A diferença agora é feita exatamente como o Questor faz no seu print
+                const diffBase = baseNov - baseAnt;
+                const diffExt = extNov - extAnt;
+                const diffDsr = dsrNov - dsrAnt;
+                
+                const totalGeral = diffBase + diffExt + diffDsr;
+                
+                // Exibe as diferenças na tela
+                row.querySelector('.diffBase').innerText = formatBR(diffBase);
+                row.querySelector('.diffExt').innerText = formatBR(diffExt);
+                row.querySelector('.diffDsr').innerText = formatBR(diffDsr);
+                row.querySelector('.vDiff').innerText = totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             });
         }
 
         function exportarCSV() {
-            let csv = "\ufeffNome;SalarioAntigo;DiasTrab;SalarioNovo;DSR;Extras;ValorAntigo;ValorNovo;Diferenca\n";
+            let csv = "\ufeffNomeFuncionario;SalarioAntigo;SalarioNovo;DiferencaDias;DiferencaExtras;DiferencaDSR;TotalDiferencaDissidio\n";
             
-            document.querySelectorAll('#tableBody tr').forEach(row => {
-                const nome = row.querySelector('td').innerText;
-                const inputs = Array.from(row.querySelectorAll('input')).map(i => cleanNum(i.value).toFixed(2).replace('.', ','));
-                const calcs = Array.from(row.querySelectorAll('.vAnt, .vNov, .vDiff')).map(td => td.innerText.replace(/\./g, ''));
+            document.querySelectorAll('#tableBody tr').forEach(r => {
+                const nome = r.querySelector('td div').innerText;
+                const sA = r.querySelector('.sAnt').value.replace('.', ',');
+                const sN = r.querySelector('.sNov').value.replace('.', ',');
                 
-                csv += `"${nome}";${inputs.join(';')};${calcs.join(';')}\n`;
+                const cleanTxt = (cls) => r.querySelector('.' + cls).innerText.replace('R$', '').trim().replace(/\./g, '');
+                
+                const dBase = cleanTxt('diffBase');
+                const dExt = cleanTxt('diffExt');
+                const dDsr = cleanTxt('diffDsr');
+                const dTotal = cleanTxt('vDiff');
+                
+                csv += `"${nome}";${sA};${sN};${dBase};${dExt};${dDsr};${dTotal}\n`;
             });
-            
+
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `MetalParts_Consolidado_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.csv`;
+            link.download = `MetalParts_Conferencia_${new Date().getTime()}.csv`;
             link.click();
         }
 
-        function limparTabela() {
-            listaGlobalFuncionarios = [];
-            totalFilesProcessed = 0;
+        function limparTabela() { 
+            listaGlobal = []; 
             document.getElementById('tableBody').innerHTML = '';
-            document.getElementById('resultsSection').classList.add('hidden');
-            document.getElementById('fileCounter').classList.add('hidden');
-            document.getElementById('lblCompetencia').classList.add('hidden');
-            fileInput.value = '';
+            document.getElementById('resultsSection').classList.add('hidden'); 
+            document.getElementById('fileInput').value = '';
+            atualizarContador();
         }
     </script>
 </body>
