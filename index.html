@@ -23,7 +23,7 @@
                 <h1 class="text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
                     <span class="bg-blue-600 text-white px-2 py-1 rounded-lg">MP</span> Painel de Dissídio
                 </h1>
-                <p class="text-slate-500 text-sm mt-1 font-medium">Multi-Importação: Relatórios Questor 97-2003</p>
+                <p class="text-slate-500 text-sm mt-1 font-medium">Multi-Importação e Arredondamento Contábil</p>
             </div>
             <div class="flex gap-6 mt-4 md:mt-0 items-center">
                 <div id="fileCounter" class="hidden text-right">
@@ -31,7 +31,9 @@
                     <span class="badge-file" id="countValue">0</span>
                 </div>
                 <div class="bg-slate-100 p-3 px-6 rounded-2xl border border-slate-200 shadow-inner">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 text-center">Dias no Mês (Divisor)</label>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 text-center flex items-center justify-center gap-1">
+                        Dias no Mês <span id="lblCompetencia" class="text-blue-500 normal-case bg-blue-100 px-1.5 py-0.5 rounded text-[9px] hidden">Auto</span>
+                    </label>
                     <input type="number" id="configDiasMes" value="31" class="bg-transparent font-black text-xl w-full text-center outline-none text-blue-700" oninput="recalcularTudo()">
                 </div>
             </div>
@@ -43,7 +45,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 </div>
                 <p class="text-slate-700 font-bold mt-4">Selecionar Múltiplos Arquivos</p>
-                <p class="text-slate-400 text-xs mt-1">Clique para selecionar ou arraste vários arquivos XLS de uma vez</p>
+                <p class="text-slate-400 text-xs mt-1">Clique ou arraste vários arquivos XLS de uma vez</p>
                 <input type="file" id="fileInput" class="hidden" accept=".xls,.xlsx,.csv" multiple>
             </div>
         </div>
@@ -90,7 +92,6 @@
     </div>
 
     <script>
-        // Variáveis de estado global
         let totalFilesProcessed = 0;
         let listaGlobalFuncionarios = [];
 
@@ -110,13 +111,13 @@
             document.getElementById('fileCounter').classList.remove('hidden');
             document.getElementById('countValue').innerText = totalFilesProcessed;
 
-            // Processa cada arquivo de forma assíncrona
             for (let file of files) {
                 const data = await lerArquivo(file);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
                 
+                detectarCompetencia(rows);
                 extrairDadosQuestor(rows);
             }
             
@@ -131,6 +132,31 @@
             });
         }
 
+        function detectarCompetencia(rows) {
+            // Varre as primeiras 20 linhas procurando a data de competência
+            for (let i = 0; i < Math.min(20, rows.length); i++) {
+                let rowStr = rows[i].join(' ');
+                if (rowStr.includes("Competência:")) {
+                    // Tenta capturar o formato dd/mm/yyyy
+                    let match = rowStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (match) {
+                        let mes = parseInt(match[2]);
+                        let ano = parseInt(match[3]);
+                        
+                        // O dia '0' do próximo mês retorna o último dia do mês atual
+                        let diasNoMes = new Date(ano, mes, 0).getDate(); 
+                        
+                        document.getElementById('configDiasMes').value = diasNoMes;
+                        
+                        let lbl = document.getElementById('lblCompetencia');
+                        lbl.innerText = `Ref: ${match[2]}/${match[3]}`;
+                        lbl.classList.remove('hidden');
+                        return; // Achou, sai da função
+                    }
+                }
+            }
+        }
+
         function extrairDadosQuestor(rows) {
             for (let i = 0; i < rows.length; i++) {
                 let rowStr = rows[i].join('|');
@@ -139,7 +165,6 @@
                     let f = { nome: "", sAnt: 0, dTra: 0, sNov: 0, dsr: 0, extras: 0 };
                     f.nome = rowStr.split("Empr.:")[1]?.split("|").filter(x => x.trim().length > 5)[0] || "Não identificado";
 
-                    // Scanner de blocos (linhas abaixo do nome)
                     for (let j = i + 1; j < i + 12 && j < rows.length; j++) {
                         let subRow = rows[j];
                         let subStr = subRow.join('|');
@@ -168,7 +193,7 @@
                         }
                     }
                     if (f.sAnt > 0) listaGlobalFuncionarios.push(f);
-                    i += 5; // Salto de segurança
+                    i += 5;
                 }
             }
         }
@@ -179,30 +204,41 @@
             return parseFloat(n) || 0;
         }
 
+        // Função de formatação para exibir o texto nos campos sem bugs no input number
+        function formatInput(element) {
+            let val = parseFloat(element.value);
+            if (!isNaN(val)) {
+                element.value = val.toFixed(2);
+            }
+            recalcularTudo();
+        }
+
         function formatBR(num) {
             return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function atualizarVisualizacao() {
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = ''; // Limpa para renderizar a lista consolidada
+            tbody.innerHTML = ''; 
             
             const divDias = cleanNum(document.getElementById('configDiasMes').value) || 31;
 
             listaGlobalFuncionarios.forEach(f => {
-                const vAnt = (f.sAnt / divDias) * f.dTra;
-                const vNov = ((f.sNov / divDias) * f.dTra) + f.dsr + f.extras;
-                const diff = vNov - vAnt;
+                // Cálculo Contábil Exato no processamento inicial
+                const vAnt = Math.round(((f.sAnt / divDias) * f.dTra) * 100) / 100;
+                const vNovProp = Math.round(((f.sNov / divDias) * f.dTra) * 100) / 100;
+                const vNov = vNovProp + f.dsr + f.extras;
+                const diff = Math.round((vNov - vAnt) * 100) / 100;
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-colors";
                 tr.innerHTML = `
                     <td class="p-4 font-bold text-slate-800">${f.nome}</td>
-                    <td><input type="number" step="0.01" value="${f.sAnt.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
-                    <td><input type="number" step="1" value="${f.dTra}" class="text-center font-mono text-blue-600 font-bold w-full bg-transparent" oninput="recalcularTudo()"></td>
-                    <td><input type="number" step="0.01" value="${f.sNov.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
-                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.dsr.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
-                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.extras.toFixed(2)}" class="text-right font-mono w-full bg-transparent" oninput="recalcularTudo()"></td>
+                    <td><input type="number" step="0.01" value="${f.sAnt.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
+                    <td><input type="number" step="1" value="${f.dTra}" class="text-center font-mono text-blue-600 font-bold w-full bg-transparent" onchange="formatInput(this)"></td>
+                    <td><input type="number" step="0.01" value="${f.sNov.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
+                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.dsr.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
+                    <td class="bg-slate-50/50"><input type="number" step="0.01" value="${f.extras.toFixed(2)}" class="text-right font-mono w-full bg-transparent" onchange="formatInput(this)"></td>
                     <td class="vAnt text-right font-mono bg-blue-50/20 p-4 text-slate-600">${formatBR(vAnt)}</td>
                     <td class="vNov text-right font-mono bg-blue-50/20 p-4 text-slate-600">${formatBR(vNov)}</td>
                     <td class="vDiff text-right font-mono font-black text-emerald-700 bg-emerald-50/50 p-4 text-base">${formatBR(diff)}</td>
@@ -225,9 +261,11 @@
                 const dsr = cleanNum(inputs[3].value);
                 const ext = cleanNum(inputs[4].value);
 
-                const vAnt = (sAnt / divDias) * dTra;
-                const vNov = ((sNov / divDias) * dTra) + dsr + ext;
-                const diff = vNov - vAnt;
+                // Cálculo Contábil Exato (Arredonda cada etapa para evitar dízimas)
+                const vAnt = Math.round(((sAnt / divDias) * dTra) * 100) / 100;
+                const vNovProp = Math.round(((sNov / divDias) * dTra) * 100) / 100;
+                const vNov = Math.round((vNovProp + dsr + ext) * 100) / 100;
+                const diff = Math.round((vNov - vAnt) * 100) / 100;
 
                 row.querySelector('.vAnt').innerText = formatBR(vAnt);
                 row.querySelector('.vNov').innerText = formatBR(vNov);
@@ -259,6 +297,7 @@
             document.getElementById('tableBody').innerHTML = '';
             document.getElementById('resultsSection').classList.add('hidden');
             document.getElementById('fileCounter').classList.add('hidden');
+            document.getElementById('lblCompetencia').classList.add('hidden');
             fileInput.value = '';
         }
     </script>
