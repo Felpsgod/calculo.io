@@ -1,358 +1,269 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel MetalParts - Conferência Questor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <title>Calculadora de Diferenças - Folha de Pagamento</title>
     <style>
-        .input-money { width: 100%; border: 1px solid transparent; background: transparent; outline: none; padding: 2px 4px; text-align: right; border-radius: 4px; transition: border 0.2s; font-weight: 600;}
-        .input-money:focus, .input-money:hover { border-color: #cbd5e1; background: white; }
-        .table-custom th { border-bottom: 2px solid #334155; }
-        .table-custom td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-        .drop-zone { border: 2px dashed #94a3b8; transition: all 0.2s; cursor: pointer; }
-        .drop-zone:hover, .drop-zone.drag-over { border-color: #2563eb; background-color: #eff6ff; }
-        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        :root {
+            --primary: #2563eb;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary);
+        }
+        .card {
+            background: var(--card);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            font-size: 1.2rem;
+            color: #374151;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .result-box {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 4px 4px 0;
+        }
+        .result-item {
+            margin: 5px 0;
+            font-size: 1.05rem;
+        }
+        .result-value {
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .highlight {
+            color: #dc2626;
+        }
     </style>
 </head>
-<body class="bg-slate-100 p-4 md:p-8 font-sans text-slate-900">
+<body>
 
-    <div class="max-w-[1600px] mx-auto">
-        <header class="bg-white p-6 rounded-t-3xl shadow-sm border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
-                    <span class="bg-blue-600 text-white px-2 py-1 rounded-lg shadow-lg">MP</span> Dissídio Analítico
-                </h1>
-                <p class="text-slate-500 text-sm mt-1 font-bold">Extração Direta: Extrato Questor (Azul vs Verde)</p>
+<div class="container">
+    <h1>Calculadora de Conferência de Folha</h1>
+
+    <div class="card">
+        <h2>1. Dados Base do Funcionário</h2>
+        <div class="grid">
+            <div class="form-group">
+                <label for="salarioBase">Salário Base (R$)</label>
+                <input type="number" id="salarioBase" placeholder="Ex: 2500.00" step="0.01" oninput="calcularTudo()">
             </div>
-            <div class="flex gap-4">
-                <span class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-full text-sm border border-slate-200">
-                    Funcionários Lidos: <span id="totalFunc" class="text-blue-700 text-lg ml-1">0</span>
-                </span>
+            <div class="form-group">
+                <label for="divisorHoras">Divisor de Horas</label>
+                <input type="number" id="divisorHoras" value="220" oninput="calcularTudo()">
             </div>
-        </header>
-
-        <section class="bg-white p-6 border-x border-slate-200">
-            <div id="dropZone" class="drop-zone rounded-2xl h-24 flex flex-col items-center justify-center group bg-slate-50">
-                <p class="text-slate-700 font-bold text-lg group-hover:text-blue-700 transition">📥 Importar Relatórios XLS (Múltiplos)</p>
-                <p class="text-slate-400 text-xs mt-1">Arraste os arquivos para cá ou clique para selecionar</p>
-                <input type="file" id="fileInput" class="hidden" accept=".xls,.xlsx,.csv" multiple>
-            </div>
-        </section>
-
-        <section id="resultsSection" class="hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div class="bg-white shadow-xl rounded-b-3xl overflow-hidden border border-slate-200">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse table-custom" id="resultTable">
-                        <thead class="bg-slate-800 text-white font-bold uppercase text-[10px] tracking-widest">
-                            <tr>
-                                <th class="p-4 w-[20%]">Funcionário / Salários</th>
-                                <th class="p-4 w-[20%] bg-slate-700 border-l border-slate-600">1. Dias Normais</th>
-                                <th class="p-4 w-[20%] bg-slate-700 border-l border-slate-600">2. Horas Extras</th>
-                                <th class="p-4 w-[20%] bg-slate-700 border-l border-slate-600">3. Reflexo / DSR</th>
-                                <th class="p-4 w-[12%] bg-emerald-700 text-right border-l border-emerald-600">Diferença Total</th>
-                                <th class="p-4 w-[8%] text-center">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody" class="divide-y divide-slate-100 bg-white">
-                            </tbody>
-                    </table>
-                </div>
-
-                <div class="p-6 bg-slate-50 flex justify-between items-center border-t border-slate-200">
-                    <button onclick="limparTabela()" class="text-slate-500 hover:text-red-600 font-black text-xs uppercase tracking-wider transition">Limpar Tudo</button>
-                    <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-4 rounded-xl font-black shadow-lg transition transform hover:-translate-y-1 active:scale-95 flex items-center gap-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        EXPORTAR PARA O QUESTOR
-                    </button>
+            <div class="form-group">
+                <label>Valor da Hora Normal:</label>
+                <div class="result-box" style="margin-top: 0; padding: 8px;">
+                    <span id="valorHoraAtual">R$ 0,00</span>
                 </div>
             </div>
-        </section>
+        </div>
     </div>
 
-    <script>
-        let listaGlobal = [];
+    <div class="card">
+        <h2>2. Horas Extras</h2>
+        <div class="grid">
+            <div class="form-group">
+                <label for="hePorcentagem">Porcentagem da HE (%)</label>
+                <input type="number" id="hePorcentagem" value="50" oninput="calcularTudo()">
+            </div>
+            <div class="form-group">
+                <label for="heTempo">Tempo de HE (HH:MM)</label>
+                <input type="text" id="heTempo" placeholder="Ex: 05:55" oninput="calcularTudo()">
+            </div>
+        </div>
+        <div class="result-box">
+            <div class="result-item">Valor de 1 Hora Extra: <span class="result-value" id="resValorUmaHE">R$ 0,00</span></div>
+            <div class="result-item">Tempo em Decimais: <span class="result-value" id="resDecimalHE">0.0000</span></div>
+            <div class="result-item">Total a Pagar de HE: <span class="result-value" id="resTotalHE">R$ 0,00</span></div>
+        </div>
+    </div>
 
-        const fileInput = document.getElementById('fileInput');
-        const dropZone = document.getElementById('dropZone');
+    <div class="card">
+        <h2>3. Faltas (Horas e Dias) + DSR</h2>
+        <div class="grid">
+            <div class="form-group">
+                <label for="faltasHoras">Faltas em Horas (HH:MM)</label>
+                <input type="text" id="faltasHoras" placeholder="Ex: 02:30" oninput="calcularTudo()">
+            </div>
+            <div class="form-group">
+                <label for="faltasDias">Faltas em Dias Integais</label>
+                <input type="number" id="faltasDias" placeholder="Ex: 2" oninput="calcularTudo()">
+            </div>
+            <div class="form-group">
+                <label for="diasUteis">Dias Úteis no Mês</label>
+                <input type="number" id="diasUteis" placeholder="Ex: 25" oninput="calcularTudo()">
+            </div>
+            <div class="form-group">
+                <label for="diasDSR">Domingos/Feriados (DSR)</label>
+                <input type="number" id="diasDSR" placeholder="Ex: 5" oninput="calcularTudo()">
+            </div>
+        </div>
+        <div class="result-box">
+            <div class="result-item">Desconto Horas Faltas: <span class="result-value highlight" id="resDescHorasFaltas">R$ 0,00</span></div>
+            <div class="result-item">DSR s/ Horas Faltas: <span class="result-value highlight" id="resDsrHorasFaltas">R$ 0,00</span></div>
+            <hr>
+            <div class="result-item">Desconto Dias Faltas: <span class="result-value highlight" id="resDescDiasFaltas">R$ 0,00</span></div>
+            <div class="result-item">DSR s/ Dias Faltas: <span class="result-value highlight" id="resDsrDiasFaltas">R$ 0,00</span></div>
+        </div>
+    </div>
 
-        dropZone.onclick = () => fileInput.click();
-        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
-        dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
-        dropZone.ondrop = (e) => { e.preventDefault(); processarArquivos(e.dataTransfer.files); };
-        fileInput.onchange = (e) => processarArquivos(e.target.files);
+    <div class="card">
+        <h2>4. Adicional Noturno e Diferença (Redução Noturna)</h2>
+        <div class="grid">
+            <div class="form-group">
+                <label for="adnPorcentagem">Porcentagem Adic. Noturno (%)</label>
+                <input type="number" id="adnPorcentagem" value="20" oninput="calcularTudo()">
+            </div>
+            <div class="form-group">
+                <label for="adnHoras">Horas Noturnas Trabalhadas (Normal)</label>
+                <input type="number" id="adnHoras" placeholder="Ex: 20" step="0.01" oninput="calcularTudo()">
+            </div>
+        </div>
+        <div class="result-box">
+            <div class="result-item">Pagamento SEM redução (Lançado): <span class="result-value" id="resAdnSemReducao">R$ 0,00</span></div>
+            <div class="result-item">Horas c/ Redução (Fator 1,1428): <span class="result-value" id="resAdnHorasReduzidas">0.000</span></div>
+            <div class="result-item">Pagamento COM redução (Correto): <span class="result-value" id="resAdnComReducao">R$ 0,00</span></div>
+            <div class="result-item"><strong>Diferença a Lançar: <span class="result-value highlight" id="resAdnDiferenca">R$ 0,00</span></strong></div>
+        </div>
+    </div>
 
-        async function processarArquivos(files) {
-            for (let file of files) {
-                const data = await file.arrayBuffer();
-                const workbook = XLSX.read(data, { type: 'array' });
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
-                extrairDados(rows);
-            }
-            renderizar();
+</div>
+
+<script>
+    // Função para formatar dinheiro
+    function formatarDinheiro(valor) {
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // Função para converter HH:MM em Decimal
+    function tempoParaDecimal(tempoStr) {
+        if (!tempoStr || !tempoStr.includes(':')) return 0;
+        let partes = tempoStr.split(':');
+        let horas = parseInt(partes[0]) || 0;
+        let minutos = parseInt(partes[1]) || 0;
+        return horas + (minutos / 60);
+    }
+
+    function calcularTudo() {
+        // --- 1. DADOS BASE ---
+        let salario = parseFloat(document.getElementById('salarioBase').value) || 0;
+        let divisor = parseFloat(document.getElementById('divisorHoras').value) || 220;
+        
+        let valorHoraNormal = salario / divisor;
+        document.getElementById('valorHoraAtual').innerText = formatarDinheiro(valorHoraNormal);
+
+        if (salario === 0) return; // Se não houver salário, não calcula o resto para evitar lixo visual
+
+        // --- 2. HORA EXTRA ---
+        let hePorc = parseFloat(document.getElementById('hePorcentagem').value) || 0;
+        let heTempo = document.getElementById('heTempo').value;
+        let heDecimal = tempoParaDecimal(heTempo);
+        
+        let valorDaHE = valorHoraNormal + (valorHoraNormal * (hePorc / 100));
+        let totalHE = valorDaHE * heDecimal;
+
+        document.getElementById('resValorUmaHE').innerText = formatarDinheiro(valorDaHE);
+        document.getElementById('resDecimalHE').innerText = heDecimal.toFixed(4);
+        document.getElementById('resTotalHE').innerText = formatarDinheiro(totalHE);
+
+        // --- 3. FALTAS E DSR ---
+        let faltasHorasStr = document.getElementById('faltasHoras').value;
+        let faltasHorasDec = tempoParaDecimal(faltasHorasStr);
+        let faltasDias = parseFloat(document.getElementById('faltasDias').value) || 0;
+        let diasUteis = parseFloat(document.getElementById('diasUteis').value) || 0;
+        let diasDSR = parseFloat(document.getElementById('diasDSR').value) || 0;
+
+        // Horas Faltas
+        let valorDescHorasFaltas = valorHoraNormal * faltasHorasDec;
+        let valorDsrHorasFaltas = 0;
+        if (diasUteis > 0) {
+            // Regra do DSR s/ Horas Faltas: (Total da Falta em R$ / Dias Úteis) * Domingos e Feriados
+            valorDsrHorasFaltas = (valorDescHorasFaltas / diasUteis) * diasDSR;
         }
 
-        // Função "limpa-tudo" para pegar apenas os números de dinheiro do Questor
-        function parseMoney(val) {
-            if (typeof val === 'number') return val;
-            if (!val) return null;
-            let str = val.toString().trim();
-            if (!/\d/.test(str)) return null; 
-            
-            let cleaned = str.replace(/[PDR$\s]/gi, '').trim(); // Remove P (provento), D (desconto), R$
-            if (cleaned.includes(':') || cleaned.includes('/')) return null; // Ignora horas (0:11) e datas
+        // Dias Faltas
+        let valorDia = salario / 30;
+        let valorDescDiasFaltas = valorDia * faltasDias;
+        let valorDsrDiasFaltas = valorDia * diasDSR; // DSR sobre dias falta costuma ser o valor do dia * qtd domingos perdidos
 
-            if (cleaned.includes(',') && cleaned.includes('.')) {
-                cleaned = cleaned.replace(/\./g, '').replace(',', '.');
-            } else if (cleaned.includes(',')) {
-                cleaned = cleaned.replace(',', '.');
-            }
-            let n = parseFloat(cleaned);
-            return isNaN(n) ? null : n;
-        }
+        document.getElementById('resDescHorasFaltas').innerText = formatarDinheiro(valorDescHorasFaltas);
+        document.getElementById('resDsrHorasFaltas').innerText = formatarDinheiro(valorDsrHorasFaltas);
+        document.getElementById('resDescDiasFaltas').innerText = formatarDinheiro(valorDescDiasFaltas);
+        document.getElementById('resDsrDiasFaltas').innerText = formatarDinheiro(valorDsrDiasFaltas);
 
-        // No bloco Azul (Antigo), o valor está no final da matriz
-        function getOldValue(arr) {
-            let nums = arr.map(parseMoney).filter(n => n !== null);
-            return nums.length > 0 ? nums[nums.length - 1] : 0;
-        }
+        // --- 4. ADICIONAL NOTURNO (REDUÇÃO) ---
+        let adnPorc = parseFloat(document.getElementById('adnPorcentagem').value) || 0;
+        let adnHoras = parseFloat(document.getElementById('adnHoras').value) || 0;
+        
+        let valorHoraNoturnaBase = valorHoraNormal * (adnPorc / 100); // Ex: 11,36 * 20% = 2,27
+        
+        // Pagamento normal sem considerar a redução de 52m30s
+        let adnSemReducao = valorHoraNoturnaBase * adnHoras;
+        
+        // Fator de conversão: 60 minutos / 52.5 minutos = 1.142857
+        let horasReduzidas = adnHoras * 1.14285714;
+        let adnComReducao = valorHoraNoturnaBase * horasReduzidas;
+        
+        let adnDiferenca = adnComReducao - adnSemReducao;
 
-        // No bloco Verde (Novo), o valor está antes da diferença
-        function getNewValue(arr) {
-            let nums = arr.map(parseMoney).filter(n => n !== null);
-            if (nums.length >= 2) return nums[nums.length - 2];
-            if (nums.length === 1) return nums[0];
-            return 0;
-        }
+        document.getElementById('resAdnSemReducao').innerText = formatarDinheiro(adnSemReducao);
+        document.getElementById('resAdnHorasReduzidas').innerText = horasReduzidas.toFixed(3);
+        document.getElementById('resAdnComReducao').innerText = formatarDinheiro(adnComReducao);
+        document.getElementById('resAdnDiferenca').innerText = formatarDinheiro(adnDiferenca);
+    }
+</script>
 
-        function extrairDados(rows) {
-            for (let i = 0; i < rows.length; i++) {
-                let rStr = rows[i].join('|');
-                
-                if (rStr.includes("Empr.:")) {
-                    let f = { 
-                        nome: rStr.split("Empr.:")[1]?.split("|").filter(x => x.trim().length > 5)[0] || "Sem Nome",
-                        sAnt: 0, sNov: 0, 
-                        baseAnt: 0, baseNov: 0, 
-                        extAnt: 0, extNov: 0, 
-                        dsrAnt: 0, dsrNov: 0 
-                    };
-
-                    // Varre as linhas debaixo do nome do funcionário
-                    for (let j = i + 1; j < Math.min(i + 20, rows.length); j++) {
-                        let r = rows[j];
-                        let rUpper = r.join(' ').toUpperCase();
-                        
-                        if (rUpper.includes("EMPR.:")) break; // Chegou no próximo funcionário
-
-                        // 1. Pega os Salários
-                        let sals = [];
-                        for (let k = 0; k < r.length; k++) {
-                            if (typeof r[k] === 'string' && r[k].toUpperCase().includes('SALÁRIO:')) {
-                                for (let m = k + 1; m < r.length; m++) {
-                                    let n = parseMoney(r[m]);
-                                    if (n !== null && n < 100000) { sals.push(n); break; }
-                                }
-                            }
-                        }
-                        if (sals.length >= 1 && f.sAnt === 0) f.sAnt = sals[0];
-                        if (sals.length >= 2 && f.sNov === 0) f.sNov = sals[1];
-
-                        // 2. Acha a coluna Descrição (Ex: DIAS NORMAIS, HORAS EXTRAS 50%)
-                        let centerTextIdx = -1;
-                        for (let k = r.length - 1; k >= 0; k--) {
-                            if (typeof r[k] === 'string') {
-                                let strClean = r[k].trim().toUpperCase();
-                                if (strClean.length > 5 && !strClean.includes("EMPR.:") && /[A-Z]{4,}/.test(strClean)) {
-                                    if (!strClean.includes("/") && !strClean.includes("SALÁRIO:")) {
-                                        centerTextIdx = k; break;
-                                    }
-                                }
-                            }
-                        }
-
-                        // 3. Divide a linha e extrai os valores (Azul x Verde)
-                        if (centerTextIdx !== -1) {
-                            let s = r[centerTextIdx].toUpperCase();
-                            
-                            let leftPart = r.slice(0, centerTextIdx);
-                            let rightPart = r.slice(centerTextIdx + 1);
-                            
-                            let oldVal = getOldValue(leftPart);
-                            let newVal = getNewValue(rightPart);
-
-                            if (oldVal > 0 || newVal > 0) {
-                                if (s.includes("DIAS NORMAIS") || s.includes("SALARIO")) {
-                                    f.baseAnt += oldVal; f.baseNov += newVal;
-                                } else if (s.includes("EXTRA") && !s.includes("REFLEXO")) {
-                                    f.extAnt += oldVal; f.extNov += newVal;
-                                } else if (s.includes("REFLEXO") || s.includes("DSR")) {
-                                    // Subtrai se for Desconto de DSR, soma se for Reflexo de Extras
-                                    if (s.includes("DESCONTO")) { f.dsrAnt -= oldVal; f.dsrNov -= newVal; }
-                                    else { f.dsrAnt += oldVal; f.dsrNov += newVal; }
-                                }
-                            }
-                        }
-                    }
-                    if (f.sAnt > 0 || f.baseAnt > 0) listaGlobal.push(f);
-                    i += 5; 
-                }
-            }
-        }
-
-        function formatBR(num) {
-            return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
-        function renderizar() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            
-            listaGlobal.forEach((f) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition group";
-                tr.innerHTML = `
-                    <td class="border-r border-slate-100">
-                        <div class="font-black text-slate-800 text-[11px] mb-3 uppercase truncate" title="${f.nome}">${f.nome}</div>
-                        <div class="flex justify-between items-center text-[11px] mb-1">
-                            <span class="text-slate-400 font-bold">Sal. Antigo:</span>
-                            <div class="flex items-center text-slate-600">R$ <input type="number" step="0.01" value="${f.sAnt.toFixed(2)}" class="input-money sAnt" oninput="recalcularTudo()"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px]">
-                            <span class="text-slate-400 font-bold">Sal. Novo:</span>
-                            <div class="flex items-center text-emerald-600 font-bold">R$ <input type="number" step="0.01" value="${f.sNov.toFixed(2)}" class="input-money sNov" oninput="recalcularTudo()"></div>
-                        </div>
-                    </td>
-
-                    <td class="border-r border-slate-100 bg-slate-50/30">
-                        <div class="flex justify-between items-center text-[11px] mb-1">
-                            <span class="text-blue-500 font-bold">Vlr Antigo:</span>
-                            <div class="flex items-center text-blue-700">R$ <input type="number" step="0.01" value="${f.baseAnt.toFixed(2)}" class="input-money baseAnt" oninput="recalcularTudo()"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] mb-2">
-                            <span class="text-emerald-500 font-bold">Vlr Novo:</span>
-                            <div class="flex items-center text-emerald-700">R$ <input type="number" step="0.01" value="${f.baseNov.toFixed(2)}" class="input-money baseNov" oninput="recalcularTudo()"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200">
-                            <span class="text-slate-400 font-bold">Diferença:</span>
-                            <span class="diffBase font-black text-slate-800">R$ 0,00</span>
-                        </div>
-                    </td>
-
-                    <td class="border-r border-slate-100 bg-slate-50/30">
-                        <div class="flex justify-between items-center text-[11px] mb-1">
-                            <span class="text-blue-500 font-bold">Vlr Antigo:</span>
-                            <div class="flex items-center text-blue-700">R$ <input type="number" step="0.01" value="${f.extAnt.toFixed(2)}" class="input-money extAnt" oninput="recalcularTudo()"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] mb-2">
-                            <span class="text-emerald-500 font-bold">Vlr Novo:</span>
-                            <div class="flex items-center text-emerald-700">R$ <input type="number" step="0.01" value="${f.extNov.toFixed(4)}" class="input-money extNov" oninput="recalcularTudo()"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200">
-                            <span class="text-slate-400 font-bold">Diferença:</span>
-                            <span class="diffExt font-black text-slate-800">R$ 0,00</span>
-                        </div>
-                    </td>
-
-                    <td class="border-r border-slate-100 bg-slate-50/30">
-                        <div class="flex justify-between items-center text-[11px] mb-1">
-                            <span class="text-blue-500 font-bold">Vlr Antigo:</span>
-                            <div class="flex items-center text-blue-700">R$ <input type="number" step="0.01" value="${f.dsrAnt.toFixed(2)}" class="input-money dsrAnt" oninput="recalcularTudo()"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] mb-2">
-                            <span class="text-emerald-500 font-bold">Vlr Novo:</span>
-                            <div class="flex items-center text-emerald-700">R$ <input type="number" step="0.01" value="${f.dsrNov.toFixed(4)}" class="input-money dsrNov" oninput="recalcularTudo()"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-[11px] pt-1 border-t border-slate-200">
-                            <span class="text-slate-400 font-bold">Diferença:</span>
-                            <span class="diffDsr font-black text-slate-800">R$ 0,00</span>
-                        </div>
-                    </td>
-
-                    <td class="bg-emerald-50/50 text-right align-middle">
-                        <div class="vDiff font-black text-emerald-600 text-lg">R$ 0,00</div>
-                    </td>
-
-                    <td class="text-center align-middle">
-                        <button onclick="removerLinha(this)" title="Excluir Funcionário" class="bg-white border border-red-200 text-red-500 hover:bg-red-500 hover:text-white rounded-lg p-2 shadow-sm transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-            
-            document.getElementById('resultsSection').classList.remove('hidden');
-            atualizarContador();
-            recalcularTudo();
-        }
-
-        function removerLinha(btn) {
-            btn.closest('tr').remove();
-            atualizarContador();
-        }
-
-        function atualizarContador() {
-            document.getElementById('totalFunc').innerText = document.querySelectorAll('#tableBody tr').length;
-        }
-
-        function recalcularTudo() {
-            const getVal = (row, cls) => parseFloat(row.querySelector('.' + cls).value) || 0;
-
-            document.querySelectorAll('#tableBody tr').forEach(row => {
-                // Captura a edição na tela
-                const baseAnt = getVal(row, 'baseAnt'), baseNov = getVal(row, 'baseNov');
-                const extAnt = getVal(row, 'extAnt'), extNov = getVal(row, 'extNov');
-                const dsrAnt = getVal(row, 'dsrAnt'), dsrNov = getVal(row, 'dsrNov');
-
-                // A diferença agora é feita exatamente como o Questor faz no seu print
-                const diffBase = baseNov - baseAnt;
-                const diffExt = extNov - extAnt;
-                const diffDsr = dsrNov - dsrAnt;
-                
-                const totalGeral = diffBase + diffExt + diffDsr;
-                
-                // Exibe as diferenças na tela
-                row.querySelector('.diffBase').innerText = formatBR(diffBase);
-                row.querySelector('.diffExt').innerText = formatBR(diffExt);
-                row.querySelector('.diffDsr').innerText = formatBR(diffDsr);
-                row.querySelector('.vDiff').innerText = totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            });
-        }
-
-        function exportarCSV() {
-            let csv = "\ufeffNomeFuncionario;SalarioAntigo;SalarioNovo;DiferencaDias;DiferencaExtras;DiferencaDSR;TotalDiferencaDissidio\n";
-            
-            document.querySelectorAll('#tableBody tr').forEach(r => {
-                const nome = r.querySelector('td div').innerText;
-                const sA = r.querySelector('.sAnt').value.replace('.', ',');
-                const sN = r.querySelector('.sNov').value.replace('.', ',');
-                
-                const cleanTxt = (cls) => r.querySelector('.' + cls).innerText.replace('R$', '').trim().replace(/\./g, '');
-                
-                const dBase = cleanTxt('diffBase');
-                const dExt = cleanTxt('diffExt');
-                const dDsr = cleanTxt('diffDsr');
-                const dTotal = cleanTxt('vDiff');
-                
-                csv += `"${nome}";${sA};${sN};${dBase};${dExt};${dDsr};${dTotal}\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `MetalParts_Conferencia_${new Date().getTime()}.csv`;
-            link.click();
-        }
-
-        function limparTabela() { 
-            listaGlobal = []; 
-            document.getElementById('tableBody').innerHTML = '';
-            document.getElementById('resultsSection').classList.add('hidden'); 
-            document.getElementById('fileInput').value = '';
-            atualizarContador();
-        }
-    </script>
 </body>
 </html>
