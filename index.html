@@ -86,6 +86,14 @@
         .highlight {
             color: #dc2626;
         }
+        .sub-title {
+            font-size: 0.95rem;
+            color: #4b5563;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body>
@@ -177,9 +185,20 @@
         </div>
         <div class="result-box">
             <div class="result-item">Tempo Lançado em Decimais: <span class="result-value" id="resDecimalAdn">0.0000</span></div>
-            <div class="result-item">Pagamento SEM redução (Lançado): <span class="result-value" id="resAdnSemReducao">R$ 0,00</span></div>
+            
+            <div class="sub-title"><strong>Cenário Lançado (S/ Redução)</strong></div>
+            <div class="result-item">Adicional Lançado: <span class="result-value" id="resAdnSemReducao">R$ 0,00</span></div>
+            <div class="result-item">DSR s/ Adic. Lançado: <span class="result-value" id="resDsrAdnSemReducao">R$ 0,00</span></div>
+            
+            <hr style="border: 0; border-top: 1px solid #bfdbfe; margin: 15px 0;">
+            
+            <div class="sub-title"><strong>Cenário Correto (C/ Redução)</strong></div>
             <div class="result-item">Horas c/ Redução (Fator 1,1428): <span class="result-value" id="resAdnHorasReduzidas">0.0000</span></div>
-            <div class="result-item">Pagamento COM redução (Correto): <span class="result-value" id="resAdnComReducao">R$ 0,00</span></div>
+            <div class="result-item">Adicional Correto: <span class="result-value" id="resAdnComReducao">R$ 0,00</span></div>
+            <div class="result-item">DSR s/ Adic. Correto: <span class="result-value" id="resDsrAdnComReducao">R$ 0,00</span></div>
+            
+            <hr style="border: 0; border-top: 1px solid #bfdbfe; margin: 15px 0;">
+            
             <div class="result-item" style="margin-top: 10px; font-size: 1.1rem;"><strong>Diferença Adicional Noturno: <span class="result-value highlight" id="resAdnDiferenca">R$ 0,00</span></strong></div>
         </div>
     </div>
@@ -258,24 +277,40 @@
         document.getElementById('resDescDiasFaltas').innerText = formatarDinheiro(valorDescDiasFaltas);
         document.getElementById('resDsrDiasFaltas').innerText = formatarDinheiro(valorDsrDiasFaltas);
 
-        // --- 4. ADICIONAL NOTURNO (REDUÇÃO) ---
+        // --- 4. ADICIONAL NOTURNO (REDUÇÃO E DSR) ---
         let adnPorc = parseFloat(document.getElementById('adnPorcentagem').value) || 0;
         let adnHorasStr = document.getElementById('adnHoras').value;
         
         let adnHorasDec = tempoParaDecimal(adnHorasStr);
         let valorHoraNoturnaBase = valorHoraNormal * (adnPorc / 100); 
         
+        // Cenário Lançado
         let adnSemReducao = valorHoraNoturnaBase * adnHorasDec;
+        let dsrAdnSemReducao = 0;
+        if (diasUteis > 0) {
+            dsrAdnSemReducao = (adnSemReducao / diasUteis) * diasDSR;
+        }
         
+        // Cenário Correto
         let horasReduzidas = adnHorasDec * 1.14285714;
         let adnComReducao = valorHoraNoturnaBase * horasReduzidas;
+        let dsrAdnComReducao = 0;
+        if (diasUteis > 0) {
+            dsrAdnComReducao = (adnComReducao / diasUteis) * diasDSR;
+        }
         
+        // Diferença apenas do Adicional Noturno
         let adnDiferenca = adnComReducao - adnSemReducao;
 
         document.getElementById('resDecimalAdn').innerText = adnHorasDec.toFixed(4);
+        
         document.getElementById('resAdnSemReducao').innerText = formatarDinheiro(adnSemReducao);
+        document.getElementById('resDsrAdnSemReducao').innerText = formatarDinheiro(dsrAdnSemReducao);
+        
         document.getElementById('resAdnHorasReduzidas').innerText = horasReduzidas.toFixed(4);
         document.getElementById('resAdnComReducao').innerText = formatarDinheiro(adnComReducao);
+        document.getElementById('resDsrAdnComReducao').innerText = formatarDinheiro(dsrAdnComReducao);
+        
         document.getElementById('resAdnDiferenca').innerText = formatarDinheiro(adnDiferenca);
     }
 </script>
