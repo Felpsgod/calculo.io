@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Diferenças - Folha de Pagamento</title>
+    <title>Calculadora Manual de Folha</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -11,6 +11,7 @@
             --card: #ffffff;
             --text: #1f2937;
             --border: #e5e7eb;
+            --success: #10b981;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -26,6 +27,7 @@
         h1 {
             text-align: center;
             color: var(--primary);
+            margin-bottom: 30px;
         }
         .card {
             background: var(--card);
@@ -56,7 +58,7 @@
             margin-bottom: 5px;
         }
         input {
-            padding: 8px;
+            padding: 10px;
             border: 1px solid var(--border);
             border-radius: 4px;
             font-size: 1rem;
@@ -92,7 +94,7 @@
     <h1>Calculadora de Conferência de Folha</h1>
 
     <div class="card">
-        <h2>1. Dados Base do Funcionário</h2>
+        <h2>1. Dados Base do Funcionário e do Mês</h2>
         <div class="grid">
             <div class="form-group">
                 <label for="salarioBase">Salário Base (R$)</label>
@@ -101,6 +103,14 @@
             <div class="form-group">
                 <label for="divisorHoras">Divisor de Horas</label>
                 <input type="number" id="divisorHoras" value="220" oninput="calcularTudo()">
+            </div>
+            <div class="form-group">
+                <label for="diasUteis">Dias Úteis no Mês</label>
+                <input type="number" id="diasUteis" placeholder="Ex: 25" oninput="calcularTudo()">
+            </div>
+            <div class="form-group">
+                <label for="diasDSR">Domingos/Feriados (DSR)</label>
+                <input type="number" id="diasDSR" placeholder="Ex: 5" oninput="calcularTudo()">
             </div>
             <div class="form-group">
                 <label>Valor da Hora Normal:</label>
@@ -126,7 +136,9 @@
         <div class="result-box">
             <div class="result-item">Valor de 1 Hora Extra: <span class="result-value" id="resValorUmaHE">R$ 0,00</span></div>
             <div class="result-item">Tempo em Decimais: <span class="result-value" id="resDecimalHE">0.0000</span></div>
-            <div class="result-item">Total a Pagar de HE: <span class="result-value" id="resTotalHE">R$ 0,00</span></div>
+            <div class="result-item">Total de HE: <span class="result-value" id="resTotalHE">R$ 0,00</span></div>
+            <div class="result-item">DSR s/ HE: <span class="result-value" id="resDsrHE">R$ 0,00</span></div>
+            <div class="result-item" style="margin-top: 10px; font-size: 1.1rem;"><strong>Total a Lançar (HE + DSR): <span class="result-value" id="resTotalGeralHE" style="color: var(--success);">R$ 0,00</span></strong></div>
         </div>
     </div>
 
@@ -138,44 +150,37 @@
                 <input type="text" id="faltasHoras" placeholder="Ex: 02:30" oninput="calcularTudo()">
             </div>
             <div class="form-group">
-                <label for="faltasDias">Faltas em Dias Integais</label>
+                <label for="faltasDias">Faltas em Dias Integrais</label>
                 <input type="number" id="faltasDias" placeholder="Ex: 2" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="diasUteis">Dias Úteis no Mês</label>
-                <input type="number" id="diasUteis" placeholder="Ex: 25" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="diasDSR">Domingos/Feriados (DSR)</label>
-                <input type="number" id="diasDSR" placeholder="Ex: 5" oninput="calcularTudo()">
             </div>
         </div>
         <div class="result-box">
             <div class="result-item">Desconto Horas Faltas: <span class="result-value highlight" id="resDescHorasFaltas">R$ 0,00</span></div>
             <div class="result-item">DSR s/ Horas Faltas: <span class="result-value highlight" id="resDsrHorasFaltas">R$ 0,00</span></div>
-            <hr>
+            <hr style="border: 0; border-top: 1px solid #bfdbfe; margin: 10px 0;">
             <div class="result-item">Desconto Dias Faltas: <span class="result-value highlight" id="resDescDiasFaltas">R$ 0,00</span></div>
             <div class="result-item">DSR s/ Dias Faltas: <span class="result-value highlight" id="resDsrDiasFaltas">R$ 0,00</span></div>
         </div>
     </div>
 
     <div class="card">
-        <h2>4. Adicional Noturno e Diferença (Redução Noturna)</h2>
+        <h2>4. Adicional Noturno e Diferença (Redução)</h2>
         <div class="grid">
             <div class="form-group">
                 <label for="adnPorcentagem">Porcentagem Adic. Noturno (%)</label>
                 <input type="number" id="adnPorcentagem" value="20" oninput="calcularTudo()">
             </div>
             <div class="form-group">
-                <label for="adnHoras">Horas Noturnas Trabalhadas (Normal)</label>
-                <input type="number" id="adnHoras" placeholder="Ex: 20" step="0.01" oninput="calcularTudo()">
+                <label for="adnHoras">Horas Noturnas Lançadas (HH:MM)</label>
+                <input type="text" id="adnHoras" placeholder="Ex: 20:30" oninput="calcularTudo()">
             </div>
         </div>
         <div class="result-box">
+            <div class="result-item">Tempo Lançado em Decimais: <span class="result-value" id="resDecimalAdn">0.0000</span></div>
             <div class="result-item">Pagamento SEM redução (Lançado): <span class="result-value" id="resAdnSemReducao">R$ 0,00</span></div>
-            <div class="result-item">Horas c/ Redução (Fator 1,1428): <span class="result-value" id="resAdnHorasReduzidas">0.000</span></div>
+            <div class="result-item">Horas c/ Redução (Fator 1,1428): <span class="result-value" id="resAdnHorasReduzidas">0.0000</span></div>
             <div class="result-item">Pagamento COM redução (Correto): <span class="result-value" id="resAdnComReducao">R$ 0,00</span></div>
-            <div class="result-item"><strong>Diferença a Lançar: <span class="result-value highlight" id="resAdnDiferenca">R$ 0,00</span></strong></div>
+            <div class="result-item" style="margin-top: 10px; font-size: 1.1rem;"><strong>Diferença a Lançar: <span class="result-value highlight" id="resAdnDiferenca">R$ 0,00</span></strong></div>
         </div>
     </div>
 
@@ -187,56 +192,69 @@
         return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Função para converter HH:MM em Decimal
+    // Função que converte HH:MM (ou número direto) em Decimal
     function tempoParaDecimal(tempoStr) {
-        if (!tempoStr || !tempoStr.includes(':')) return 0;
-        let partes = tempoStr.split(':');
-        let horas = parseInt(partes[0]) || 0;
-        let minutos = parseInt(partes[1]) || 0;
-        return horas + (minutos / 60);
+        if (!tempoStr) return 0;
+        
+        if (tempoStr.includes(':')) {
+            let partes = tempoStr.split(':');
+            let horas = parseInt(partes[0]) || 0;
+            let minutos = parseInt(partes[1]) || 0;
+            return horas + (minutos / 60);
+        }
+        
+        return parseFloat(tempoStr.replace(',', '.')) || 0;
     }
 
     function calcularTudo() {
-        // --- 1. DADOS BASE ---
+        // --- 1. DADOS BASE E DO MÊS ---
         let salario = parseFloat(document.getElementById('salarioBase').value) || 0;
         let divisor = parseFloat(document.getElementById('divisorHoras').value) || 220;
+        let diasUteis = parseFloat(document.getElementById('diasUteis').value) || 0;
+        let diasDSR = parseFloat(document.getElementById('diasDSR').value) || 0;
         
         let valorHoraNormal = salario / divisor;
         document.getElementById('valorHoraAtual').innerText = formatarDinheiro(valorHoraNormal);
 
-        if (salario === 0) return; // Se não houver salário, não calcula o resto para evitar lixo visual
+        if (salario === 0) return; 
 
-        // --- 2. HORA EXTRA ---
+        // --- 2. HORA EXTRA + DSR ---
         let hePorc = parseFloat(document.getElementById('hePorcentagem').value) || 0;
-        let heTempo = document.getElementById('heTempo').value;
-        let heDecimal = tempoParaDecimal(heTempo);
+        let heTempoStr = document.getElementById('heTempo').value;
+        let heDecimal = tempoParaDecimal(heTempoStr);
         
         let valorDaHE = valorHoraNormal + (valorHoraNormal * (hePorc / 100));
         let totalHE = valorDaHE * heDecimal;
 
+        // Cálculo do DSR sobre as Horas Extras: (Total HE / Dias Úteis) * Domingos e Feriados
+        let dsrHE = 0;
+        if (diasUteis > 0) {
+            dsrHE = (totalHE / diasUteis) * diasDSR;
+        }
+        let totalGeralHE = totalHE + dsrHE;
+
         document.getElementById('resValorUmaHE').innerText = formatarDinheiro(valorDaHE);
         document.getElementById('resDecimalHE').innerText = heDecimal.toFixed(4);
         document.getElementById('resTotalHE').innerText = formatarDinheiro(totalHE);
+        document.getElementById('resDsrHE').innerText = formatarDinheiro(dsrHE);
+        document.getElementById('resTotalGeralHE').innerText = formatarDinheiro(totalGeralHE);
 
         // --- 3. FALTAS E DSR ---
         let faltasHorasStr = document.getElementById('faltasHoras').value;
         let faltasHorasDec = tempoParaDecimal(faltasHorasStr);
         let faltasDias = parseFloat(document.getElementById('faltasDias').value) || 0;
-        let diasUteis = parseFloat(document.getElementById('diasUteis').value) || 0;
-        let diasDSR = parseFloat(document.getElementById('diasDSR').value) || 0;
 
-        // Horas Faltas
+        // Faltas Horas
         let valorDescHorasFaltas = valorHoraNormal * faltasHorasDec;
         let valorDsrHorasFaltas = 0;
         if (diasUteis > 0) {
-            // Regra do DSR s/ Horas Faltas: (Total da Falta em R$ / Dias Úteis) * Domingos e Feriados
             valorDsrHorasFaltas = (valorDescHorasFaltas / diasUteis) * diasDSR;
         }
 
-        // Dias Faltas
+        // Faltas Dias
         let valorDia = salario / 30;
         let valorDescDiasFaltas = valorDia * faltasDias;
-        let valorDsrDiasFaltas = valorDia * diasDSR; // DSR sobre dias falta costuma ser o valor do dia * qtd domingos perdidos
+        let valorDsrDiasFaltas = valorDia * diasDSR; 
 
         document.getElementById('resDescHorasFaltas').innerText = formatarDinheiro(valorDescHorasFaltas);
         document.getElementById('resDsrHorasFaltas').innerText = formatarDinheiro(valorDsrHorasFaltas);
@@ -245,21 +263,21 @@
 
         // --- 4. ADICIONAL NOTURNO (REDUÇÃO) ---
         let adnPorc = parseFloat(document.getElementById('adnPorcentagem').value) || 0;
-        let adnHoras = parseFloat(document.getElementById('adnHoras').value) || 0;
+        let adnHorasStr = document.getElementById('adnHoras').value;
         
-        let valorHoraNoturnaBase = valorHoraNormal * (adnPorc / 100); // Ex: 11,36 * 20% = 2,27
+        let adnHorasDec = tempoParaDecimal(adnHorasStr);
+        let valorHoraNoturnaBase = valorHoraNormal * (adnPorc / 100); 
         
-        // Pagamento normal sem considerar a redução de 52m30s
-        let adnSemReducao = valorHoraNoturnaBase * adnHoras;
+        let adnSemReducao = valorHoraNoturnaBase * adnHorasDec;
         
-        // Fator de conversão: 60 minutos / 52.5 minutos = 1.142857
-        let horasReduzidas = adnHoras * 1.14285714;
+        let horasReduzidas = adnHorasDec * 1.14285714;
         let adnComReducao = valorHoraNoturnaBase * horasReduzidas;
         
         let adnDiferenca = adnComReducao - adnSemReducao;
 
+        document.getElementById('resDecimalAdn').innerText = adnHorasDec.toFixed(4);
         document.getElementById('resAdnSemReducao').innerText = formatarDinheiro(adnSemReducao);
-        document.getElementById('resAdnHorasReduzidas').innerText = horasReduzidas.toFixed(3);
+        document.getElementById('resAdnHorasReduzidas').innerText = horasReduzidas.toFixed(4);
         document.getElementById('resAdnComReducao').innerText = formatarDinheiro(adnComReducao);
         document.getElementById('resAdnDiferenca').innerText = formatarDinheiro(adnDiferenca);
     }
