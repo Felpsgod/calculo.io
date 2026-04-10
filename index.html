@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cálculo - Sistema de Dissídio</title>
+    <title>MetalParts - Sistema de Dissídio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -26,7 +26,6 @@
         .rotate-180 { transform: rotate(180deg); }
         .transition-transform { transition: transform 0.3s ease; }
         
-        /* Efeito Glassmorphism pro Header */
         .glass-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     </style>
 </head>
@@ -146,7 +145,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         // --------------------------------------------------------------------------------
-        // CONFIGURAÇÃO DO FIREBASE (API REST)
+        // CONFIGURAÇÃO DO FIREBASE
         // --------------------------------------------------------------------------------
         const DB_URL = "https://teeste-e33ff-default-rtdb.firebaseio.com/extratos";
 
@@ -185,21 +184,12 @@
             document.getElementById('cardsGrid').innerHTML = '';
 
             try {
-                // Requisição crua para debugar erro 404/HTML
                 const response = await fetch(DB_URL + ".json");
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
                 
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-
                 const text = await response.text();
-                
-                // Se voltar HTML, o banco não foi instanciado
-                if (text.trim().startsWith('<')) {
-                    throw new Error("O Firebase retornou uma página HTML. Você clicou em 'Criar Banco de Dados' na aba Realtime Database do Firebase?");
-                }
+                if (text.trim().startsWith('<')) throw new Error("O Firebase retornou uma página HTML. Você clicou em 'Criar Banco de Dados' na aba Realtime Database do Firebase?");
 
-                // Faz o parse do texto para JSON
                 const dados = text ? JSON.parse(text) : {};
                 
                 document.getElementById('loadingDash').classList.add('hidden');
@@ -233,7 +223,7 @@
                 } else {
                     document.getElementById('cardsGrid').innerHTML = `
                         <div class="col-span-full text-center py-12 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-white">
-                            Nenhum extrato salvo no banco. Clique em "Novo Extrato" para começar o primeiro mês.
+                            Nenhum extrato salvo no banco. Clique em "Novo Extrato" para começar.
                         </div>`;
                 }
             } catch (error) {
@@ -245,7 +235,6 @@
             }
         }
 
-        // --- FIREBASE: ABRIR EXTRATO ---
         function abrirExtrato(key, data) {
             extratoDB = data.extratoDB || [];
             configsGlobais = data.configsGlobais || {};
@@ -254,7 +243,7 @@
             document.getElementById('cfgDivHoras').value = data.cfgDivHoras || 220;
             document.getElementById('cfgPercNoturno').value = data.cfgPercNoturno || 20;
             
-            document.getElementById('importSection').classList.add('hidden'); // Esconde importador pois já carregou
+            document.getElementById('importSection').classList.add('hidden'); 
             document.getElementById('view-dashboard').classList.add('hidden');
             document.getElementById('view-editor').classList.remove('hidden');
             document.getElementById('navStatus').classList.remove('hidden');
@@ -262,7 +251,6 @@
             renderizarGrid();
         }
 
-        // --- FIREBASE: SALVAR EXTRATO ---
         async function salvarNoFirebase() {
             const mesRef = document.getElementById('mesReferencia').value.trim();
             if (!mesRef) {
@@ -272,9 +260,9 @@
             }
 
             const safeKey = mesRef.replace(/[^a-zA-Z0-9-]/g, '-');
-            
             const btn = document.getElementById('btnSalvar');
             const btnOriginalText = btn.innerHTML;
+            
             btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SALVANDO...`;
             btn.disabled = true;
 
@@ -305,11 +293,11 @@
                         btn.classList.replace('border-blue-500', 'border-emerald-500');
                     }, 3000);
                 } else {
-                    throw new Error("Falha na gravação. Código: " + response.status);
+                    throw new Error("Falha na gravação.");
                 }
             } catch (error) {
                 console.error(error);
-                alert("Erro ao salvar no Firebase. Verifique sua conexão e o link do banco.");
+                alert("Erro ao salvar no Firebase.");
                 btn.innerHTML = btnOriginalText;
                 btn.disabled = false;
             }
@@ -317,7 +305,7 @@
 
 
         // =========================================================================
-        // MOTOR DE EXTRAÇÃO E CÁLCULO (MANTIDO DO SEU ÚLTIMO FEEDBACK PERFEITO)
+        // MOTOR DE EXTRAÇÃO E CÁLCULO
         // =========================================================================
 
         const fileInput = document.getElementById('fileInput');
@@ -348,7 +336,7 @@
                 renderizarGrid();
             } catch (err) {
                 console.error(err);
-                alert("Erro ao processar o arquivo. Verifique o console.");
+                alert("Erro ao processar o arquivo.");
             }
             dropText.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)`;
         }
@@ -748,10 +736,12 @@
             const divHorasGlob = parseFloat(document.getElementById('cfgDivHoras').value) || 220;
             const pNoturno = parseFloat(document.getElementById('cfgPercNoturno').value) || 20;
 
-            let somaVarsBase = {}; 
+            let somaHE = {}; 
+            let somaAdicNot = {}; 
             let somaParaTerco = {}; 
             let totalPorFuncionario = {};
 
+            // Passada 1 (Cálculos Diretos e Acúmulos Específicos)
             extratoDB.forEach(v => {
                 const row = document.getElementById('row_' + v.id);
                 if (!row) return;
@@ -778,11 +768,15 @@
                     let m = v.descExata.match(/(\d+)%/);
                     if (m) pExtra = 1 + (parseInt(m[1]) / 100);
                     v.vNov = (sNov / divLinha) * pExtra * v.qtdCalc;
-                    somaVarsBase[v.nome] = (somaVarsBase[v.nome] || 0) + v.vNov;
+                    
+                    // Vai exclusivamente para o pote de HE
+                    somaHE[v.nome] = (somaHE[v.nome] || 0) + v.vNov;
                 }
                 else if (v.cat === 'ADIC_NOT') {
                     v.vNov = (sNov / divLinha) * (pNoturno / 100) * v.qtdCalc;
-                    somaVarsBase[v.nome] = (somaVarsBase[v.nome] || 0) + v.vNov;
+                    
+                    // Vai exclusivamente para o pote de Noturno
+                    somaAdicNot[v.nome] = (somaAdicNot[v.nome] || 0) + v.vNov;
                 }
                 else if (v.cat === 'FALTA_DIA') {
                     v.vNov = -Math.abs((sNov / divLinha) * v.qtdCalc);
@@ -800,6 +794,7 @@
                 if (v.isDesc && v.vNov > 0) v.vNov = -v.vNov; 
             });
 
+            // Passada 2 (DSRs e Totais)
             extratoDB.forEach(v => {
                 const row = document.getElementById('row_' + v.id);
                 if (!row) return;
@@ -815,7 +810,17 @@
                 else if (v.cat === 'DSR_DESC') {
                     v.vNov = -Math.abs((sNov / divLinha) * v.qtdCalc);
                 } else if (v.cat === 'DSR_PROV') {
-                    let varSum = somaVarsBase[v.nome] || 0;
+                    let varSum = 0;
+                    
+                    // Identifica de qual "pote" esse DSR deve puxar o valor
+                    if (v.descExata.includes("EXTRAS")) {
+                        varSum = somaHE[v.nome] || 0;
+                    } else if (v.descExata.includes("ADIC. NOT") || v.descExata.includes("ADICIONAL NOTURNO")) {
+                        varSum = somaAdicNot[v.nome] || 0;
+                    } else {
+                        varSum = (somaHE[v.nome] || 0) + (somaAdicNot[v.nome] || 0); // Prevenção
+                    }
+
                     v.vNov = (varSum / divLinha) * v.qtdCalc;
                 }
 
@@ -833,6 +838,7 @@
                 else { elDiff.classList.add('text-slate-700'); elDiff.classList.remove('text-red-600', 'text-emerald-700'); }
             });
 
+            // Atualiza os Cabeçalhos
             Object.keys(configsGlobais).forEach(nome => {
                 let total = totalPorFuncionario[nome] || 0;
                 document.querySelectorAll('tr[id^="master_"]').forEach(tr => {
