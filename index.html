@@ -27,19 +27,24 @@
         .transition-transform { transition: transform 0.3s ease; }
         
         .glass-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen flex flex-col" onload="carregarDashboard()">
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden" onload="carregarDashboard()">
 
-    <nav class="glass-header border-b border-slate-200 shadow-sm p-4 px-8 flex justify-between items-center shrink-0 z-50 sticky top-0">
-        <div class="flex items-center gap-5 cursor-pointer hover:opacity-80 transition" onclick="mostrarDashboard()">
-            <img src="https://i.imgur.com/balrNP2.png" alt="MetalParts Logo" class="h-14 w-auto drop-shadow-sm">
-            <div class="h-8 w-px bg-slate-300"></div>
+    <nav class="glass-header border-b border-slate-200 shadow-sm p-3 px-6 flex justify-between items-center shrink-0 z-50">
+        <div class="flex items-center gap-4 cursor-pointer hover:opacity-80 transition" onclick="mostrarDashboard()">
+            <img src="https://i.imgur.com/balrNP2.png" alt="MetalParts Logo" class="h-10 w-auto drop-shadow-sm">
+            <div class="h-6 w-px bg-slate-300"></div>
             <div>
-                <h1 class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-600 tracking-tight uppercase">
+                <h1 class="text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-600 tracking-tight uppercase">
                     Cálculo de Dissídio
                 </h1>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Analítico</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Painel Analítico</p>
             </div>
         </div>
         <div id="navStatus" class="text-xs text-emerald-600 font-bold flex items-center gap-2 hidden bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 shadow-inner">
@@ -47,9 +52,9 @@
         </div>
     </nav>
 
-    <div class="max-w-[1500px] mx-auto w-full flex-1 flex flex-col p-4 md:p-8 overflow-hidden">
+    <div class="w-full flex-1 flex flex-col overflow-hidden bg-slate-100">
         
-        <div id="view-dashboard" class="flex-1 flex flex-col animate-in fade-in duration-500">
+        <div id="view-dashboard" class="flex-1 flex flex-col animate-in fade-in duration-500 p-6 overflow-y-auto max-w-[1600px] mx-auto w-full">
             <div class="flex justify-between items-end mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div>
                     <h2 class="text-3xl font-black text-slate-800 tracking-tight">Extratos Salvos</h2>
@@ -70,44 +75,44 @@
                 </div>
         </div>
 
-        <div id="view-editor" class="hidden flex-1 flex flex-col animate-in slide-in-from-bottom-8 duration-500 min-h-0 bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+        <div id="view-editor" class="hidden flex-1 flex flex-col animate-in slide-in-from-bottom-4 duration-500 min-h-0 bg-white">
             
-            <header class="bg-slate-50 p-5 border-b border-slate-200 shrink-0">
+            <header class="bg-white p-4 px-6 border-b border-slate-200 shrink-0 shadow-sm z-10">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div class="flex items-center gap-4">
-                        <button onclick="mostrarDashboard()" class="text-slate-400 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 p-2.5 rounded-lg transition shadow-sm" title="Voltar">
+                        <button onclick="mostrarDashboard()" class="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 p-2.5 rounded-lg transition shadow-sm" title="Voltar">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         </button>
                         <div>
-                            <input type="text" id="mesReferencia" placeholder="Ref: Ex 01/2026" class="text-2xl font-black text-slate-800 tracking-tighter bg-transparent border-b-2 border-transparent focus:border-blue-600 outline-none w-56 transition placeholder:text-slate-300" title="Mês/Ano do Arquivo">
-                            <p class="text-slate-500 text-[10px] uppercase font-bold mt-1 tracking-wider">Configure o título para salvar na nuvem</p>
+                            <input type="text" id="mesReferencia" placeholder="Ref: Ex 01/2026" class="text-xl font-black text-slate-800 tracking-tighter bg-transparent border-b-2 border-transparent focus:border-blue-600 outline-none w-48 transition placeholder:text-slate-300" title="Mês/Ano do Arquivo">
+                            <p class="text-slate-500 text-[9px] uppercase font-bold mt-0.5 tracking-wider">Título de salvamento na nuvem</p>
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <div class="bg-white p-2 px-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase">Divisor Horas:</label>
-                            <input type="number" id="cfgDivHoras" value="220" class="w-14 bg-slate-50 border border-slate-200 rounded p-1 text-sm font-bold text-center outline-none focus:border-blue-500 transition" oninput="recalcularTudo()">
+                        <div class="bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-200 flex items-center gap-2">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase">Divisor Horas:</label>
+                            <input type="number" id="cfgDivHoras" value="220" class="w-12 bg-white border border-slate-200 rounded p-1 text-xs font-bold text-center outline-none focus:border-blue-500 transition" oninput="recalcularTudo()">
                         </div>
-                        <div class="bg-white p-2 px-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase">% Noturno:</label>
-                            <input type="number" id="cfgPercNoturno" value="20" class="w-14 bg-slate-50 border border-slate-200 rounded p-1 text-sm font-bold text-center outline-none focus:border-blue-500 transition" oninput="recalcularTudo()">
+                        <div class="bg-slate-50 p-1.5 px-3 rounded-lg border border-slate-200 flex items-center gap-2">
+                            <label class="text-[9px] font-bold text-slate-500 uppercase">% Noturno:</label>
+                            <input type="number" id="cfgPercNoturno" value="20" class="w-12 bg-white border border-slate-200 rounded p-1 text-xs font-bold text-center outline-none focus:border-blue-500 transition" oninput="recalcularTudo()">
                         </div>
-                        <div class="bg-blue-50 p-2 px-4 rounded-xl border border-blue-200 flex items-center gap-3 shadow-sm">
-                            <label class="text-[10px] font-bold text-blue-800 uppercase">Aplicar Dissídio:</label>
-                            <div class="flex shadow-sm rounded-md overflow-hidden">
-                                <input type="number" step="0.01" id="cfgAumento" placeholder="Ex: 5.5" class="w-16 bg-white border-y border-l border-blue-300 p-1.5 text-sm font-bold text-center outline-none text-blue-900">
-                                <button onclick="aplicarAumentoMassa()" class="bg-blue-600 text-white font-black px-3 border-y border-r border-blue-600 hover:bg-blue-700 transition">%</button>
+                        <div class="bg-blue-50 p-1.5 px-3 rounded-lg border border-blue-200 flex items-center gap-2">
+                            <label class="text-[9px] font-bold text-blue-800 uppercase">Aplicar Dissídio Lote:</label>
+                            <div class="flex shadow-sm rounded overflow-hidden">
+                                <input type="number" step="0.01" id="cfgAumento" placeholder="Ex: 5.5" class="w-16 bg-white border-y border-l border-blue-300 p-1 text-xs font-bold text-center outline-none text-blue-900">
+                                <button onclick="aplicarAumentoMassa()" class="bg-blue-600 text-white font-black px-3 border-y border-r border-blue-600 hover:bg-blue-700 transition text-xs">%</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <section id="importSection" class="p-6 border-b border-slate-200 shrink-0 bg-white">
-                <div id="dropZone" class="drop-zone rounded-xl h-20 flex items-center justify-center group bg-slate-50">
+            <section id="importSection" class="p-4 px-6 border-b border-slate-200 shrink-0 bg-slate-50/50">
+                <div id="dropZone" class="drop-zone rounded-xl h-14 flex items-center justify-center group bg-white shadow-sm">
                     <p class="text-slate-500 font-bold text-sm group-hover:text-blue-600 transition flex items-center gap-3" id="dropText">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                         Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)
                     </p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf,.xls,.xlsx,.csv" multiple>
@@ -115,23 +120,24 @@
             </section>
 
             <section id="resultsSection" class="hidden flex-1 min-h-0 bg-slate-50 flex flex-col">
-                <div class="overflow-auto flex-1 relative">
+                <div class="overflow-auto flex-1 relative bg-slate-100/50">
                     <table class="w-full text-left border-collapse" id="mainTable">
-                        <tbody id="tableBody" class="bg-white"></tbody>
+                        <tbody id="tableBody"></tbody>
                     </table>
                 </div>
 
-                <div class="p-4 bg-white flex justify-between items-center border-t border-slate-200 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <div class="px-6 py-3 bg-white flex justify-between items-center border-t border-slate-200 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
                     <span class="text-slate-500 font-bold text-xs bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                        Funcionários Extraídos: <span id="totalFuncs" class="text-blue-600 font-black ml-1 text-sm">0</span>
+                        Funcionários Lidos: <span id="totalFuncs" class="text-blue-600 font-black ml-1 text-sm">0</span>
                     </span>
-                    <div class="flex gap-4">
-                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md transition text-xs flex items-center gap-2">
+                    <div class="flex gap-3">
+                        <button onclick="limparTabela()" class="text-slate-500 hover:text-red-600 font-bold text-[10px] uppercase tracking-wider transition mr-4">Limpar Painel</button>
+                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-lg font-bold shadow-md transition text-xs flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             EXPORTAR EXCEL
                         </button>
-                        <button onclick="salvarNoFirebase()" id="btnSalvar" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-black shadow-[0_4px_14px_rgba(16,185,129,0.4)] transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 text-sm border border-emerald-500">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 002-2v-4M17 9l-5 5m0 0l-5-5m5 5V3"></path></svg>
+                        <button onclick="salvarNoFirebase()" id="btnSalvar" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-black shadow-md transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 text-xs border border-emerald-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 002-2v-4M17 9l-5 5m0 0l-5-5m5 5V3"></path></svg>
                             SALVAR NA NUVEM
                         </button>
                     </div>
@@ -145,7 +151,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         // --------------------------------------------------------------------------------
-        // CONFIGURAÇÃO DO FIREBASE
+        // CONFIGURAÇÃO DO FIREBASE (API REST)
         // --------------------------------------------------------------------------------
         const DB_URL = "https://teeste-e33ff-default-rtdb.firebaseio.com/extratos";
 
@@ -161,7 +167,7 @@
         let extratoDB = [];
         let configsGlobais = {}; 
 
-        // --- CONTROLE DE TELAS ---
+        // --- CONTROLES DE TELAS ---
         function mostrarDashboard() {
             document.getElementById('view-editor').classList.add('hidden');
             document.getElementById('view-dashboard').classList.remove('hidden');
@@ -177,7 +183,7 @@
             document.getElementById('navStatus').classList.remove('hidden');
         }
 
-        // --- FIREBASE: CARREGAR DASHBOARD ---
+        // --- FIREBASE ---
         async function carregarDashboard() {
             document.getElementById('loadingDash').classList.remove('hidden');
             document.getElementById('cardsGrid').classList.add('hidden');
@@ -188,7 +194,7 @@
                 if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
                 
                 const text = await response.text();
-                if (text.trim().startsWith('<')) throw new Error("O Firebase retornou uma página HTML. Você clicou em 'Criar Banco de Dados' na aba Realtime Database do Firebase?");
+                if (text.trim().startsWith('<')) throw new Error("O Firebase retornou uma página HTML. Banco de dados não instanciado.");
 
                 const dados = text ? JSON.parse(text) : {};
                 
@@ -254,7 +260,7 @@
         async function salvarNoFirebase() {
             const mesRef = document.getElementById('mesReferencia').value.trim();
             if (!mesRef) {
-                alert("Por favor, informe o Mês de Referência (Ex: 01/2026) no topo da tela antes de salvar.");
+                alert("Por favor, informe o Título (Ex: 01/2026) no topo da tela antes de salvar.");
                 document.getElementById('mesReferencia').focus();
                 return;
             }
@@ -263,7 +269,7 @@
             const btn = document.getElementById('btnSalvar');
             const btnOriginalText = btn.innerHTML;
             
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SALVANDO...`;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SALVANDO...`;
             btn.disabled = true;
 
             const payload = {
@@ -336,9 +342,9 @@
                 renderizarGrid();
             } catch (err) {
                 console.error(err);
-                alert("Erro ao processar o arquivo.");
+                alert("Erro ao processar o arquivo. Verifique o console.");
             }
-            dropText.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)`;
+            dropText.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)`;
         }
 
         function parseMoney(val) {
@@ -530,6 +536,7 @@
             }
         }
 
+        // --- RENDERIZAÇÃO CASCATA COM BADGES EXPANSIVOS ---
         function renderizarGrid() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -545,8 +552,21 @@
                 const cfg = configsGlobais[nome];
                 const fId = Math.random().toString(36).substr(2, 9);
 
+                // --- BADGES FLEXÍVEIS DO ESPAÇO LIVRE ---
+                let badgesHtml = `<div class="flex flex-wrap gap-2 p-1">`;
+                verbas.forEach(v => {
+                    badgesHtml += `
+                        <div id="badge_item_${v.id}" class="flex justify-between items-center px-2 py-1.5 rounded-md border bg-slate-50 border-slate-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200">
+                            <span id="badge_desc_${v.id}" class="text-[9px] font-bold uppercase truncate pr-2 text-slate-500" title="${v.descExata}">${v.descExata}</span>
+                            <span id="badge_diff_${v.id}" class="text-[10px] font-black text-slate-600">R$ 0,00</span>
+                        </div>
+                    `;
+                });
+                badgesHtml += `</div>`;
+
+                // --- LINHA MESTRA ---
                 const trMaster = document.createElement('tr');
-                trMaster.className = "bg-slate-800 text-white cursor-pointer hover:bg-slate-700 transition";
+                trMaster.className = "bg-white text-slate-800 cursor-pointer hover:bg-slate-50 transition border-b-2 border-slate-200 shadow-sm";
                 trMaster.id = "master_" + fId;
                 trMaster.onclick = (e) => {
                     if(e.target.closest('input') || e.target.closest('button')) return;
@@ -555,58 +575,62 @@
                 };
 
                 trMaster.innerHTML = `
-                    <td class="p-3 rounded-tl-lg border-b border-slate-700">
-                        <div class="flex items-center gap-2">
-                            <svg id="arr_${fId}" class="w-4 h-4 text-slate-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            <span class="font-black text-xs uppercase truncate w-[180px] block" title="${nome}">${nome}</span>
+                    <td class="p-3 align-middle w-[16%] border-r border-slate-100">
+                        <div class="flex items-center gap-2 pl-2">
+                            <svg id="arr_${fId}" class="w-4 h-4 text-blue-500 transition-transform rotate-180 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <span class="font-black text-[11px] uppercase truncate block text-slate-700" title="${nome}">${nome}</span>
                         </div>
                     </td>
-                    <td class="p-2 border-b border-slate-700" onclick="event.stopPropagation()">
-                        <div class="flex items-center gap-4 text-[10px]">
-                            <div><span class="text-slate-400 block mb-0.5">Salário Antigo</span><span class="font-mono font-bold text-slate-200">R$ ${cfg.sAnt.toFixed(2)}</span></div>
+                    <td class="p-2 align-middle w-[24%] border-r border-slate-100 bg-slate-50/50" onclick="event.stopPropagation()">
+                        <div class="flex flex-wrap items-center gap-2.5 text-[10px] justify-start pl-1">
+                            <div><span class="text-slate-500 block mb-0.5">Sal. Antigo</span><span class="font-mono font-bold text-slate-700">R$ ${cfg.sAnt.toFixed(2)}</span></div>
                             <div>
-                                <span class="text-blue-400 font-bold block mb-0.5">Novo Salário</span>
-                                <input type="number" step="0.01" value="${cfg.sNov.toFixed(2)}" class="input-box bg-blue-900/50 text-blue-100 border-blue-500/50 w-24 text-center focus:bg-blue-800" oninput="sincronizarConfig('${nome}', 'sNov', this.value)">
+                                <span class="text-blue-600 font-bold block mb-0.5">Sal. Novo</span>
+                                <input type="number" step="0.01" value="${cfg.sNov.toFixed(2)}" class="input-box bg-blue-50 text-blue-700 border border-blue-300 w-16 text-center focus:bg-blue-100 shadow-sm px-1" oninput="sincronizarConfig('${nome}', 'sNov', this.value)">
                             </div>
                             <div>
-                                <span class="text-slate-400 block mb-0.5">Divisor (Dias)</span>
-                                <input type="number" value="${cfg.diasMes}" class="input-box bg-slate-700 text-slate-200 border-slate-500 w-16 text-center focus:bg-slate-600" oninput="sincronizarConfig('${nome}', 'diasMes', this.value)">
+                                <span class="text-slate-500 block mb-0.5">Divisor</span>
+                                <input type="number" value="${cfg.diasMes}" class="input-box bg-white text-slate-700 border border-slate-300 w-12 text-center focus:bg-slate-50 shadow-sm px-1" oninput="sincronizarConfig('${nome}', 'diasMes', this.value)">
                             </div>
                             <div>
-                                <span class="text-slate-400 block mb-0.5">Dias DSR</span>
-                                <input type="number" value="${cfg.qtdDsr}" class="input-box bg-slate-700 text-slate-200 border-slate-500 w-16 text-center focus:bg-slate-600" oninput="sincronizarConfig('${nome}', 'qtdDsr', this.value)">
+                                <span class="text-slate-500 block mb-0.5">DSR</span>
+                                <input type="number" value="${cfg.qtdDsr}" class="input-box bg-white text-slate-700 border border-slate-300 w-12 text-center focus:bg-slate-50 shadow-sm px-1" oninput="sincronizarConfig('${nome}', 'qtdDsr', this.value)">
                             </div>
                         </div>
                     </td>
-                    <td class="p-2 border-b border-slate-700 text-right w-[150px]">
-                        <span class="text-[10px] text-slate-400 uppercase block mb-0.5">Total da Diferença</span>
-                        <span class="font-black text-emerald-400 text-base" id="total_${fId}">R$ 0,00</span>
+                    <td class="p-2 align-middle w-[45%] bg-slate-50/30">
+                        ${badgesHtml}
                     </td>
-                    <td class="p-2 rounded-tr-lg border-b border-slate-700 text-center w-[50px]">
-                        <button onclick="removerFuncionario('${nome}')" title="Excluir Funcionário" class="bg-slate-600 hover:bg-red-500 text-white p-1.5 rounded transition">
+                    <td class="p-2 text-right w-[10%] align-middle bg-slate-50 border-l border-slate-100 pr-4">
+                        <span class="text-[10px] text-slate-500 uppercase block mb-0.5 font-bold">Líquido</span>
+                        <span class="font-black text-emerald-600 text-lg tracking-tight" id="total_${fId}">R$ 0,00</span>
+                    </td>
+                    <td class="p-2 text-center w-[5%] align-middle bg-slate-50 pr-4">
+                        <button onclick="removerFuncionario('${nome}')" title="Excluir Funcionário" class="bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 p-2 rounded-lg transition shadow-sm border border-slate-200 hover:border-red-200">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </td>
                 `;
                 tbody.appendChild(trMaster);
 
+                // --- LINHA DE DETALHES (Verbas Internas) ---
                 const trDetail = document.createElement('tr');
                 trDetail.id = "det_" + fId;
-                trDetail.className = "bg-white hidden border-b-4 border-slate-300";
+                trDetail.className = "bg-slate-50 hidden border-b-4 border-slate-300";
                 
                 let htmlVerbas = `
-                    <td colspan="4" class="p-0">
+                    <td colspan="5" class="p-0">
                         <table class="w-full text-left table-custom">
                             <thead>
                                 <tr>
-                                    <th class="w-[20%] text-left pl-10 bg-slate-100 text-slate-600 border-b border-slate-300">Verba Filtrada</th>
-                                    <th class="w-[8%] text-center bg-slate-100 text-slate-600 border-b border-slate-300">Qtd Original</th>
-                                    <th class="w-[8%] text-center bg-slate-100 text-indigo-700 border-b border-slate-300">Qtd Efetiva</th>
-                                    <th class="w-[8%] text-center bg-amber-50 text-amber-700 border-x border-b border-amber-200">Divisor</th>
-                                    <th class="w-[8%] text-right bg-slate-100 text-slate-600 border-b border-slate-300">Valor Antigo</th>
-                                    <th class="w-[8%] text-right bg-slate-100 text-emerald-700 border-b border-slate-300">Novo Calculado</th>
-                                    <th class="w-[8%] text-right bg-slate-100 text-emerald-800 border-b border-slate-300">Diferença</th>
-                                    <th class="w-[5%] text-center bg-slate-100 text-slate-600 border-b border-slate-300">Excluir</th>
+                                    <th class="w-[20%] text-left pl-10 bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Verba Filtrada</th>
+                                    <th class="w-[8%] text-center bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Qtd Original</th>
+                                    <th class="w-[8%] text-center bg-slate-200 text-indigo-700 border-b border-slate-300 shadow-inner">Qtd Efetiva</th>
+                                    <th class="w-[8%] text-center bg-amber-100 text-amber-700 border-x border-b border-amber-200 shadow-inner">Divisor</th>
+                                    <th class="w-[8%] text-right bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Valor Antigo</th>
+                                    <th class="w-[8%] text-right bg-slate-200 text-emerald-700 border-b border-slate-300 shadow-inner">Novo Calculado</th>
+                                    <th class="w-[8%] text-right bg-slate-200 text-emerald-800 border-b border-slate-300 shadow-inner">Diferença</th>
+                                    <th class="w-[5%] text-center bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Excluir</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -634,31 +658,31 @@
                         calcQtdHTML = `<input type="text" value="-" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled>`;
                     } else {
                         divHtml = `<input type="number" step="0.01" value="${v.divisorLinha}" class="input-box text-center bg-amber-50/50 text-amber-700 border-amber-200 font-bold inp-divisor" oninput="atualizarDivisorManual('${v.id}', this.value)">`;
-                        calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-transparent border-none text-indigo-700 font-bold" oninput="atualizarQtdManual('${v.id}', this.value)">`;
+                        calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-indigo-50 text-indigo-700 font-bold border border-indigo-200" oninput="atualizarQtdManual('${v.id}', this.value)">`;
                     }
 
                     htmlVerbas += `
-                        <tr id="row_${v.id}" data-nome="${nome}" class="hover:bg-slate-50 transition border-b border-slate-100">
+                        <tr id="row_${v.id}" data-nome="${nome}" class="hover:bg-white transition border-b border-slate-200 bg-slate-50/50">
                             <td class="pl-10 py-2.5">
                                 <div class="font-bold text-slate-700 text-[10px] uppercase truncate" title="${v.descExata}">${v.descExata}</div>
                                 <span class="text-[9px] font-bold px-1.5 rounded border ${badgeClass}">${txtTipo}</span>
                             </td>
                             <td class="text-center font-mono text-slate-500 text-[10px]">${v.qtdLida}</td>
                             
-                            <td class="text-center bg-indigo-50/30">${calcQtdHTML}</td>
-                            <td class="text-center border-x border-amber-100 bg-amber-50/10 p-1">${divHtml}</td>
+                            <td class="text-center bg-indigo-50/30 px-4">${calcQtdHTML}</td>
+                            <td class="text-center border-x border-amber-100 bg-amber-50/10 p-1 px-4">${divHtml}</td>
 
-                            <td class="text-right">
-                                <input type="number" step="0.01" value="${v.vAnt.toFixed(2)}" class="input-box text-slate-600 bg-white border border-slate-200 shadow-sm inp-v-ant focus:border-blue-400" oninput="recalcularTudo()">
+                            <td class="text-right px-4">
+                                <input type="number" step="0.01" value="${v.vAnt.toFixed(2)}" class="input-box text-slate-600 bg-white border border-slate-300 shadow-sm inp-v-ant focus:border-blue-400" oninput="recalcularTudo()">
                             </td>
-                            <td class="text-right bg-emerald-50/20 align-middle">
-                                <div class="val-nov font-bold text-emerald-700 text-[11px] pr-2">R$ 0,00</div>
+                            <td class="text-right bg-emerald-50/20 align-middle pr-6 border-l border-emerald-100/50">
+                                <div class="val-nov font-bold text-emerald-700 text-[11px]">R$ 0,00</div>
                             </td>
-                            <td class="text-right bg-emerald-50/50 align-middle border-l border-emerald-100">
-                                <div class="val-diff font-black text-slate-700 text-[12px] pr-2">R$ 0,00</div>
+                            <td class="text-right bg-emerald-50/50 align-middle border-l border-emerald-100 pr-6">
+                                <div class="val-diff font-black text-slate-700 text-[12px]">R$ 0,00</div>
                             </td>
                             <td class="text-center align-middle">
-                                <button onclick="removerVerba('${v.id}')" title="Excluir Verba" class="text-slate-300 hover:text-red-500 bg-white hover:bg-red-50 p-1.5 rounded-lg border border-slate-200 transition shadow-sm">
+                                <button onclick="removerVerba('${v.id}')" title="Excluir Verba" class="text-slate-400 hover:text-red-500 bg-white hover:bg-red-50 p-1.5 rounded-lg border border-slate-200 transition shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </td>
@@ -676,7 +700,7 @@
             recalcularTudo();
         }
 
-        // --- SINCRONIZAÇÃO E MATEMÁTICA ---
+        // --- CÁLCULOS E REATIVIDADE ---
         function sincronizarConfig(nome, campo, valor) {
             let num = parseFloat(valor) || 0;
             configsGlobais[nome][campo] = num;
@@ -741,7 +765,6 @@
             let somaParaTerco = {}; 
             let totalPorFuncionario = {};
 
-            // Passada 1 (Cálculos Diretos e Acúmulos Específicos)
             extratoDB.forEach(v => {
                 const row = document.getElementById('row_' + v.id);
                 if (!row) return;
@@ -768,14 +791,10 @@
                     let m = v.descExata.match(/(\d+)%/);
                     if (m) pExtra = 1 + (parseInt(m[1]) / 100);
                     v.vNov = (sNov / divLinha) * pExtra * v.qtdCalc;
-                    
-                    // Vai exclusivamente para o pote de HE
                     somaHE[v.nome] = (somaHE[v.nome] || 0) + v.vNov;
                 }
                 else if (v.cat === 'ADIC_NOT') {
                     v.vNov = (sNov / divLinha) * (pNoturno / 100) * v.qtdCalc;
-                    
-                    // Vai exclusivamente para o pote de Noturno
                     somaAdicNot[v.nome] = (somaAdicNot[v.nome] || 0) + v.vNov;
                 }
                 else if (v.cat === 'FALTA_DIA') {
@@ -794,7 +813,6 @@
                 if (v.isDesc && v.vNov > 0) v.vNov = -v.vNov; 
             });
 
-            // Passada 2 (DSRs e Totais)
             extratoDB.forEach(v => {
                 const row = document.getElementById('row_' + v.id);
                 if (!row) return;
@@ -811,15 +829,9 @@
                     v.vNov = -Math.abs((sNov / divLinha) * v.qtdCalc);
                 } else if (v.cat === 'DSR_PROV') {
                     let varSum = 0;
-                    
-                    // Identifica de qual "pote" esse DSR deve puxar o valor
-                    if (v.descExata.includes("EXTRAS")) {
-                        varSum = somaHE[v.nome] || 0;
-                    } else if (v.descExata.includes("ADIC. NOT") || v.descExata.includes("ADICIONAL NOTURNO")) {
-                        varSum = somaAdicNot[v.nome] || 0;
-                    } else {
-                        varSum = (somaHE[v.nome] || 0) + (somaAdicNot[v.nome] || 0); // Prevenção
-                    }
+                    if (v.descExata.includes("EXTRAS")) varSum = somaHE[v.nome] || 0;
+                    else if (v.descExata.includes("ADIC. NOT") || v.descExata.includes("ADICIONAL NOTURNO")) varSum = somaAdicNot[v.nome] || 0;
+                    else varSum = (somaHE[v.nome] || 0) + (somaAdicNot[v.nome] || 0);
 
                     v.vNov = (varSum / divLinha) * v.qtdCalc;
                 }
@@ -833,20 +845,45 @@
                 const elDiff = row.querySelector('.val-diff');
                 elDiff.innerText = v.diff.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-                if (v.diff < -0.01) { elDiff.classList.add('text-red-600'); elDiff.classList.remove('text-emerald-700', 'text-slate-700'); }
-                else if (v.diff > 0.01) { elDiff.classList.add('text-emerald-700'); elDiff.classList.remove('text-red-600', 'text-slate-700'); }
-                else { elDiff.classList.add('text-slate-700'); elDiff.classList.remove('text-red-600', 'text-emerald-700'); }
+                let colorClass = v.diff < -0.01 ? 'text-red-600' : (v.diff > 0.01 ? 'text-emerald-700' : 'text-slate-500');
+                elDiff.className = `val-diff font-black text-[12px] pr-2 ${colorClass}`;
+
+                // --- Atualiza Cores das Flags no Header ---
+                const elBadgeItem = document.getElementById(`badge_item_${v.id}`);
+                const elBadgeDiff = document.getElementById(`badge_diff_${v.id}`);
+                const elBadgeDesc = document.getElementById(`badge_desc_${v.id}`);
+                
+                if (elBadgeItem && elBadgeDiff && elBadgeDesc) {
+                    let diffFormat = (v.diff > 0 ? '+' : '') + v.diff.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    if(v.diff === 0) diffFormat = '0,00';
+                    
+                    elBadgeDiff.innerText = diffFormat;
+                    
+                    if (v.diff < -0.01) {
+                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-red-50 border-red-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200";
+                        elBadgeDesc.className = "text-[9px] font-bold uppercase truncate pr-2 text-red-600";
+                        elBadgeDiff.className = "text-[10px] font-black text-red-700";
+                    } else if (v.diff > 0.01) {
+                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-emerald-50 border-emerald-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200";
+                        elBadgeDesc.className = "text-[9px] font-bold uppercase truncate pr-2 text-emerald-600";
+                        elBadgeDiff.className = "text-[10px] font-black text-emerald-700";
+                    } else {
+                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-slate-50 border-slate-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200";
+                        elBadgeDesc.className = "text-[9px] font-bold uppercase truncate pr-2 text-slate-500";
+                        elBadgeDiff.className = "text-[10px] font-black text-slate-600";
+                    }
+                }
             });
 
-            // Atualiza os Cabeçalhos
+            // Atualiza Header do Funcionário (Total Líquido)
             Object.keys(configsGlobais).forEach(nome => {
                 let total = totalPorFuncionario[nome] || 0;
                 document.querySelectorAll('tr[id^="master_"]').forEach(tr => {
                     if (tr.querySelector('span[title]').innerText === nome) {
                         const elTot = tr.querySelector('span[id^="total_"]');
                         elTot.innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        if (total < -0.01) { elTot.classList.add('text-red-400'); elTot.classList.remove('text-emerald-400'); }
-                        else { elTot.classList.add('text-emerald-400'); elTot.classList.remove('text-red-400'); }
+                        let masterColorClass = total < -0.01 ? 'text-red-500' : (total > 0.01 ? 'text-emerald-600' : 'text-slate-500');
+                        elTot.className = `font-black text-lg tracking-tight ${masterColorClass}`;
                     }
                 });
             });
@@ -854,6 +891,7 @@
 
         function removerVerba(id) {
             document.getElementById('row_' + id)?.remove();
+            document.getElementById('badge_item_' + id)?.remove();
             let verba = extratoDB.find(v => v.id === id);
             extratoDB = extratoDB.filter(v => v.id !== id);
             
