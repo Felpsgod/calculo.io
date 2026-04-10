@@ -1,319 +1,905 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Manual de Folha</title>
+    <title>MetalParts - Sistema de Dissídio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg: #f3f4f6;
-            --card: #ffffff;
-            --text: #1f2937;
-            --border: #e5e7eb;
-            --success: #10b981;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            color: var(--primary);
-            margin-bottom: 30px;
-        }
-        .card {
-            background: var(--card);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .card h2 {
-            margin-top: 0;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
-            font-size: 1.2rem;
-            color: #374151;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-        input {
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-        }
-        .result-box {
-            background-color: #eff6ff;
-            border-left: 4px solid var(--primary);
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 0 4px 4px 0;
-        }
-        .result-item {
-            margin: 5px 0;
-            font-size: 1.05rem;
-        }
-        .result-value {
-            font-weight: bold;
-            color: var(--primary);
-        }
-        .highlight {
-            color: #dc2626;
-        }
-        .sub-title {
-            font-size: 0.95rem;
-            color: #4b5563;
-            margin-top: 10px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .input-box { border: 1px solid transparent; background: transparent; outline: none; padding: 4px 6px; text-align: right; border-radius: 6px; font-weight: 700; font-family: monospace; font-size: 12px; width: 100%; transition: all 0.2s;}
+        .input-box:focus, .input-box:hover { border-color: #94a3b8; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .input-box.text-center { text-align: center; }
+        
+        .table-custom th { border-bottom: 2px solid #1e293b; padding: 12px 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; background-color: #0f172a; color: #f8fafc; position: sticky; top: 0; z-index: 10;}
+        .table-custom td { padding: 6px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.3s; cursor: pointer; }
+        .drop-zone:hover { border-color: #3b82f6; background-color: #f0f9ff; }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        
+        .rotate-180 { transform: rotate(180deg); }
+        .transition-transform { transition: transform 0.3s ease; }
+        
+        /* Efeito Glassmorphism pro Header */
+        .glass-header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col" onload="carregarDashboard()">
 
-<div class="container">
-    <h1>Calculadora de Conferência de Folha</h1>
+    <nav class="glass-header border-b border-slate-200 shadow-sm p-4 px-8 flex justify-between items-center shrink-0 z-50 sticky top-0">
+        <div class="flex items-center gap-5 cursor-pointer hover:opacity-80 transition" onclick="mostrarDashboard()">
+            <img src="https://i.imgur.com/balrNP2.png" alt="MetalParts Logo" class="h-14 w-auto drop-shadow-sm">
+            <div class="h-8 w-px bg-slate-300"></div>
+            <div>
+                <h1 class="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-600 tracking-tight uppercase">
+                    Cálculo de Dissídio
+                </h1>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Analítico</p>
+            </div>
+        </div>
+        <div id="navStatus" class="text-xs text-emerald-600 font-bold flex items-center gap-2 hidden bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 shadow-inner">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span> Nuvem Ativa
+        </div>
+    </nav>
 
-    <div class="card">
-        <h2>1. Dados Base do Funcionário e do Mês</h2>
-        <div class="grid">
-            <div class="form-group">
-                <label for="salarioBase">Salário Base (R$)</label>
-                <input type="number" id="salarioBase" placeholder="Ex: 2500.00" step="0.01" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="divisorHoras">Divisor de Horas</label>
-                <input type="number" id="divisorHoras" value="220" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="diasUteis">Dias Úteis no Mês</label>
-                <input type="number" id="diasUteis" placeholder="Ex: 25" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="diasDSR">Domingos/Feriados (DSR)</label>
-                <input type="number" id="diasDSR" placeholder="Ex: 5" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label>Valor da Hora Normal:</label>
-                <div class="result-box" style="margin-top: 0; padding: 8px;">
-                    <span id="valorHoraAtual">R$ 0,00</span>
+    <div class="max-w-[1500px] mx-auto w-full flex-1 flex flex-col p-4 md:p-8 overflow-hidden">
+        
+        <div id="view-dashboard" class="flex-1 flex flex-col animate-in fade-in duration-500">
+            <div class="flex justify-between items-end mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">Extratos Salvos</h2>
+                    <p class="text-slate-500 font-medium mt-1 text-sm">Acesse o histórico de dissídios ou inicie um novo processamento de folha.</p>
                 </div>
+                <button onclick="novoExtrato()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3.5 rounded-xl font-black shadow-[0_4px_14px_rgba(37,99,235,0.3)] transition-all flex items-center gap-2 transform hover:-translate-y-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    NOVO EXTRATO
+                </button>
             </div>
+            
+            <div id="loadingDash" class="text-center py-20 text-slate-400 font-bold">
+                <svg class="animate-spin h-10 w-10 mx-auto mb-4 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Sincronizando com a nuvem...
+            </div>
+
+            <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden pb-10">
+                </div>
+        </div>
+
+        <div id="view-editor" class="hidden flex-1 flex flex-col animate-in slide-in-from-bottom-8 duration-500 min-h-0 bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+            
+            <header class="bg-slate-50 p-5 border-b border-slate-200 shrink-0">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-4">
+                        <button onclick="mostrarDashboard()" class="text-slate-400 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 p-2.5 rounded-lg transition shadow-sm" title="Voltar">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        </button>
+                        <div>
+                            <input type="text" id="mesReferencia" placeholder="Ref: Ex 01/2026" class="text-2xl font-black text-slate-800 tracking-tighter bg-transparent border-b-2 border-transparent focus:border-blue-600 outline-none w-56 transition placeholder:text-slate-300" title="Mês/Ano do Arquivo">
+                            <p class="text-slate-500 text-[10px] uppercase font-bold mt-1 tracking-wider">Configure o título para salvar na nuvem</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="bg-white p-2 px-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Divisor Horas:</label>
+                            <input type="number" id="cfgDivHoras" value="220" class="w-14 bg-slate-50 border border-slate-200 rounded p-1 text-sm font-bold text-center outline-none focus:border-blue-500 transition" oninput="recalcularTudo()">
+                        </div>
+                        <div class="bg-white p-2 px-4 rounded-xl border border-slate-200 flex items-center gap-3 shadow-sm">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">% Noturno:</label>
+                            <input type="number" id="cfgPercNoturno" value="20" class="w-14 bg-slate-50 border border-slate-200 rounded p-1 text-sm font-bold text-center outline-none focus:border-blue-500 transition" oninput="recalcularTudo()">
+                        </div>
+                        <div class="bg-blue-50 p-2 px-4 rounded-xl border border-blue-200 flex items-center gap-3 shadow-sm">
+                            <label class="text-[10px] font-bold text-blue-800 uppercase">Aplicar Dissídio:</label>
+                            <div class="flex shadow-sm rounded-md overflow-hidden">
+                                <input type="number" step="0.01" id="cfgAumento" placeholder="Ex: 5.5" class="w-16 bg-white border-y border-l border-blue-300 p-1.5 text-sm font-bold text-center outline-none text-blue-900">
+                                <button onclick="aplicarAumentoMassa()" class="bg-blue-600 text-white font-black px-3 border-y border-r border-blue-600 hover:bg-blue-700 transition">%</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <section id="importSection" class="p-6 border-b border-slate-200 shrink-0 bg-white">
+                <div id="dropZone" class="drop-zone rounded-xl h-20 flex items-center justify-center group bg-slate-50">
+                    <p class="text-slate-500 font-bold text-sm group-hover:text-blue-600 transition flex items-center gap-3" id="dropText">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)
+                    </p>
+                    <input type="file" id="fileInput" class="hidden" accept=".pdf,.xls,.xlsx,.csv" multiple>
+                </div>
+            </section>
+
+            <section id="resultsSection" class="hidden flex-1 min-h-0 bg-slate-50 flex flex-col">
+                <div class="overflow-auto flex-1 relative">
+                    <table class="w-full text-left border-collapse" id="mainTable">
+                        <tbody id="tableBody" class="bg-white"></tbody>
+                    </table>
+                </div>
+
+                <div class="p-4 bg-white flex justify-between items-center border-t border-slate-200 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <span class="text-slate-500 font-bold text-xs bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                        Funcionários Extraídos: <span id="totalFuncs" class="text-blue-600 font-black ml-1 text-sm">0</span>
+                    </span>
+                    <div class="flex gap-4">
+                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-md transition text-xs flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            EXPORTAR EXCEL
+                        </button>
+                        <button onclick="salvarNoFirebase()" id="btnSalvar" class="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-black shadow-[0_4px_14px_rgba(16,185,129,0.4)] transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 text-sm border border-emerald-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 002-2v-4M17 9l-5 5m0 0l-5-5m5 5V3"></path></svg>
+                            SALVAR NA NUVEM
+                        </button>
+                    </div>
+                </div>
+            </section>
+
         </div>
     </div>
 
-    <div class="card">
-        <h2>2. Horas Extras</h2>
-        <div class="grid">
-            <div class="form-group">
-                <label for="hePorcentagem">Porcentagem da HE (%)</label>
-                <input type="number" id="hePorcentagem" value="50" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="heTempo">Tempo de HE (HH:MM)</label>
-                <input type="text" id="heTempo" placeholder="Ex: 05:55" oninput="calcularTudo()">
-            </div>
-        </div>
-        <div class="result-box">
-            <div class="result-item">Valor de 1 Hora Extra: <span class="result-value" id="resValorUmaHE">R$ 0,00</span></div>
-            <div class="result-item">Tempo em Decimais: <span class="result-value" id="resDecimalHE">0.0000</span></div>
-            <div class="result-item">Total de HE: <span class="result-value" id="resTotalHE">R$ 0,00</span></div>
-            <div class="result-item">DSR s/ HE: <span class="result-value" id="resDsrHE">R$ 0,00</span></div>
-            <div class="result-item" style="margin-top: 10px; font-size: 1.1rem;"><strong>Total a Lançar (HE + DSR): <span class="result-value" id="resTotalGeralHE" style="color: var(--success);">R$ 0,00</span></strong></div>
-        </div>
-    </div>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    <div class="card">
-        <h2>3. Faltas (Horas e Dias) + DSR</h2>
-        <div class="grid">
-            <div class="form-group">
-                <label for="faltasHoras">Faltas em Horas (HH:MM)</label>
-                <input type="text" id="faltasHoras" placeholder="Ex: 02:30" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="faltasDias">Faltas em Dias Integrais</label>
-                <input type="number" id="faltasDias" placeholder="Ex: 2" oninput="calcularTudo()">
-            </div>
-        </div>
-        <div class="result-box">
-            <div class="result-item">Desconto Horas Faltas: <span class="result-value highlight" id="resDescHorasFaltas">R$ 0,00</span></div>
-            <div class="result-item">DSR s/ Horas Faltas: <span class="result-value highlight" id="resDsrHorasFaltas">R$ 0,00</span></div>
-            <hr style="border: 0; border-top: 1px solid #bfdbfe; margin: 10px 0;">
-            <div class="result-item">Desconto Dias Faltas: <span class="result-value highlight" id="resDescDiasFaltas">R$ 0,00</span></div>
-            <div class="result-item">DSR s/ Dias Faltas: <span class="result-value highlight" id="resDsrDiasFaltas">R$ 0,00</span></div>
-        </div>
-    </div>
+        // --------------------------------------------------------------------------------
+        // CONFIGURAÇÃO DO FIREBASE (API REST)
+        // --------------------------------------------------------------------------------
+        const DB_URL = "https://teeste-e33ff-default-rtdb.firebaseio.com/extratos";
 
-    <div class="card">
-        <h2>4. Adicional Noturno e Diferença (Redução)</h2>
-        <div class="grid">
-            <div class="form-group">
-                <label for="adnPorcentagem">Porcentagem Adic. Noturno (%)</label>
-                <input type="number" id="adnPorcentagem" value="20" oninput="calcularTudo()">
-            </div>
-            <div class="form-group">
-                <label for="adnHoras">Horas Noturnas Lançadas (HH:MM)</label>
-                <input type="text" id="adnHoras" placeholder="Ex: 20:30" oninput="calcularTudo()">
-            </div>
-        </div>
-        <div class="result-box">
-            <div class="result-item">Tempo Lançado em Decimais: <span class="result-value" id="resDecimalAdn">0.0000</span></div>
-            
-            <div class="sub-title"><strong>Cenário Lançado (S/ Redução)</strong></div>
-            <div class="result-item">Adicional Lançado: <span class="result-value" id="resAdnSemReducao">R$ 0,00</span></div>
-            <div class="result-item">DSR s/ Adic. Lançado: <span class="result-value" id="resDsrAdnSemReducao">R$ 0,00</span></div>
-            
-            <hr style="border: 0; border-top: 1px solid #bfdbfe; margin: 15px 0;">
-            
-            <div class="sub-title"><strong>Cenário Correto (C/ Redução)</strong></div>
-            <div class="result-item">Horas c/ Redução (Fator 1,1428): <span class="result-value" id="resAdnHorasReduzidas">0.0000</span></div>
-            <div class="result-item">Adicional Correto: <span class="result-value" id="resAdnComReducao">R$ 0,00</span></div>
-            <div class="result-item">DSR s/ Adic. Correto: <span class="result-value" id="resDsrAdnComReducao">R$ 0,00</span></div>
-            
-            <hr style="border: 0; border-top: 1px solid #bfdbfe; margin: 15px 0;">
-            
-            <div class="result-item" style="margin-top: 10px; font-size: 1.1rem;"><strong>Diferença Adicional Noturno: <span class="result-value highlight" id="resAdnDiferenca">R$ 0,00</span></strong></div>
-        </div>
-    </div>
+        const PROVENTOS_PERMITIDOS = [
+            "DIAS NORMAIS", "HORAS EXTRAS 50%", "REFLEXO EXTRAS DSR", "DIFERENCA DE 1/3 DE FERIAS",
+            "DIFERENCA MEDIA HORA FERIAS", "DIFERENCA MEDIA VALOR FERIAS", "REFLEXO HORAS ADIC. NOT DSR",
+            "REFLEXO HORAS ADIC. NOT", "MEDIA VALOR FERIAS", "MEDIA HORAS FERIAS", "1/3 DAS FERIAS", 
+            "DIAS FERIAS", "ADICIONAL NOTURNO 20%"
+        ];
 
-</div>
+        const DESCONTOS_PERMITIDOS = ["HORAS FALTAS PARCIAL", "DIAS FALTAS DSR", "DIAS FALTAS"];
 
-<script>
-    // Função para formatar dinheiro
-    function formatarDinheiro(valor) {
-        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
+        let extratoDB = [];
+        let configsGlobais = {}; 
 
-    // Função que converte HH:MM (ou número direto) em Decimal
-    function tempoParaDecimal(tempoStr) {
-        if (!tempoStr) return 0;
-        
-        if (tempoStr.includes(':')) {
-            let partes = tempoStr.split(':');
-            let horas = parseInt(partes[0]) || 0;
-            let minutos = parseInt(partes[1]) || 0;
-            return horas + (minutos / 60);
-        }
-        
-        return parseFloat(tempoStr.replace(',', '.')) || 0;
-    }
-
-    function calcularTudo() {
-        // --- 1. DADOS BASE E DO MÊS ---
-        let salario = parseFloat(document.getElementById('salarioBase').value) || 0;
-        let divisor = parseFloat(document.getElementById('divisorHoras').value) || 220;
-        let diasUteis = parseFloat(document.getElementById('diasUteis').value) || 0;
-        let diasDSR = parseFloat(document.getElementById('diasDSR').value) || 0;
-        
-        let valorHoraNormal = salario / divisor;
-        document.getElementById('valorHoraAtual').innerText = formatarDinheiro(valorHoraNormal);
-
-        if (salario === 0) return; 
-
-        // --- 2. HORA EXTRA + DSR ---
-        let hePorc = parseFloat(document.getElementById('hePorcentagem').value) || 0;
-        let heTempoStr = document.getElementById('heTempo').value;
-        let heDecimal = tempoParaDecimal(heTempoStr);
-        
-        let valorDaHE = valorHoraNormal + (valorHoraNormal * (hePorc / 100));
-        let totalHE = valorDaHE * heDecimal;
-
-        let dsrHE = 0;
-        if (diasUteis > 0) {
-            dsrHE = (totalHE / diasUteis) * diasDSR;
-        }
-        let totalGeralHE = totalHE + dsrHE;
-
-        document.getElementById('resValorUmaHE').innerText = formatarDinheiro(valorDaHE);
-        document.getElementById('resDecimalHE').innerText = heDecimal.toFixed(4);
-        document.getElementById('resTotalHE').innerText = formatarDinheiro(totalHE);
-        document.getElementById('resDsrHE').innerText = formatarDinheiro(dsrHE);
-        document.getElementById('resTotalGeralHE').innerText = formatarDinheiro(totalGeralHE);
-
-        // --- 3. FALTAS E DSR ---
-        let faltasHorasStr = document.getElementById('faltasHoras').value;
-        let faltasHorasDec = tempoParaDecimal(faltasHorasStr);
-        let faltasDias = parseFloat(document.getElementById('faltasDias').value) || 0;
-
-        let valorDescHorasFaltas = valorHoraNormal * faltasHorasDec;
-        let valorDsrHorasFaltas = 0;
-        if (diasUteis > 0) {
-            valorDsrHorasFaltas = (valorDescHorasFaltas / diasUteis) * diasDSR;
+        // --- CONTROLE DE TELAS ---
+        function mostrarDashboard() {
+            document.getElementById('view-editor').classList.add('hidden');
+            document.getElementById('view-dashboard').classList.remove('hidden');
+            carregarDashboard();
         }
 
-        let valorDia = salario / 30;
-        let valorDescDiasFaltas = valorDia * faltasDias;
-        let valorDsrDiasFaltas = valorDia * diasDSR; 
-
-        document.getElementById('resDescHorasFaltas').innerText = formatarDinheiro(valorDescHorasFaltas);
-        document.getElementById('resDsrHorasFaltas').innerText = formatarDinheiro(valorDsrHorasFaltas);
-        document.getElementById('resDescDiasFaltas').innerText = formatarDinheiro(valorDescDiasFaltas);
-        document.getElementById('resDsrDiasFaltas').innerText = formatarDinheiro(valorDsrDiasFaltas);
-
-        // --- 4. ADICIONAL NOTURNO (REDUÇÃO E DSR) ---
-        let adnPorc = parseFloat(document.getElementById('adnPorcentagem').value) || 0;
-        let adnHorasStr = document.getElementById('adnHoras').value;
-        
-        let adnHorasDec = tempoParaDecimal(adnHorasStr);
-        let valorHoraNoturnaBase = valorHoraNormal * (adnPorc / 100); 
-        
-        // Cenário Lançado
-        let adnSemReducao = valorHoraNoturnaBase * adnHorasDec;
-        let dsrAdnSemReducao = 0;
-        if (diasUteis > 0) {
-            dsrAdnSemReducao = (adnSemReducao / diasUteis) * diasDSR;
+        function novoExtrato() {
+            limparTabela();
+            document.getElementById('mesReferencia').value = "";
+            document.getElementById('importSection').classList.remove('hidden');
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-editor').classList.remove('hidden');
+            document.getElementById('navStatus').classList.remove('hidden');
         }
-        
-        // Cenário Correto
-        let horasReduzidas = adnHorasDec * 1.14285714;
-        let adnComReducao = valorHoraNoturnaBase * horasReduzidas;
-        let dsrAdnComReducao = 0;
-        if (diasUteis > 0) {
-            dsrAdnComReducao = (adnComReducao / diasUteis) * diasDSR;
+
+        // --- FIREBASE: CARREGAR DASHBOARD ---
+        async function carregarDashboard() {
+            document.getElementById('loadingDash').classList.remove('hidden');
+            document.getElementById('cardsGrid').classList.add('hidden');
+            document.getElementById('cardsGrid').innerHTML = '';
+
+            try {
+                // Requisição crua para debugar erro 404/HTML
+                const response = await fetch(DB_URL + ".json");
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const text = await response.text();
+                
+                // Se voltar HTML, o banco não foi instanciado
+                if (text.trim().startsWith('<')) {
+                    throw new Error("O Firebase retornou uma página HTML. Você clicou em 'Criar Banco de Dados' na aba Realtime Database do Firebase?");
+                }
+
+                // Faz o parse do texto para JSON
+                const dados = text ? JSON.parse(text) : {};
+                
+                document.getElementById('loadingDash').classList.add('hidden');
+                document.getElementById('cardsGrid').classList.remove('hidden');
+
+                if (dados && Object.keys(dados).length > 0) {
+                    Object.keys(dados).forEach(key => {
+                        let mesData = dados[key];
+                        let qtsFuncs = Object.keys(mesData.configsGlobais || {}).length;
+                        
+                        let card = document.createElement('div');
+                        card.className = "bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-lg transition cursor-pointer group relative overflow-hidden";
+                        card.onclick = () => abrirExtrato(key, mesData);
+                        
+                        card.innerHTML = `
+                            <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:w-2 transition-all"></div>
+                            <div class="flex justify-between items-start mb-4 pl-2">
+                                <div class="bg-blue-50 p-3 rounded-xl text-blue-600 group-hover:scale-110 transition-transform shadow-sm">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-800 mb-1 pl-2">${mesData.mesRef || key}</h3>
+                            <p class="text-sm font-semibold text-slate-500 mb-4 pl-2">${qtsFuncs} Funcionários Processados</p>
+                            <div class="flex justify-between items-center text-xs font-bold pt-4 border-t border-slate-100 pl-2">
+                                <span class="text-emerald-600 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Salvo na Nuvem</span>
+                                <span class="text-blue-600 group-hover:underline">Abrir Painel &rarr;</span>
+                            </div>
+                        `;
+                        document.getElementById('cardsGrid').appendChild(card);
+                    });
+                } else {
+                    document.getElementById('cardsGrid').innerHTML = `
+                        <div class="col-span-full text-center py-12 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-white">
+                            Nenhum extrato salvo no banco. Clique em "Novo Extrato" para começar o primeiro mês.
+                        </div>`;
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('loadingDash').innerHTML = `<div class='text-red-500 bg-red-50 p-6 rounded-xl border border-red-200 inline-block'>
+                    <p class="font-black text-lg mb-2">Erro de Conexão com o Firebase</p>
+                    <p class="font-medium text-sm">${error.message}</p>
+                </div>`;
+            }
         }
-        
-        // Diferença apenas do Adicional Noturno
-        let adnDiferenca = adnComReducao - adnSemReducao;
 
-        document.getElementById('resDecimalAdn').innerText = adnHorasDec.toFixed(4);
-        
-        document.getElementById('resAdnSemReducao').innerText = formatarDinheiro(adnSemReducao);
-        document.getElementById('resDsrAdnSemReducao').innerText = formatarDinheiro(dsrAdnSemReducao);
-        
-        document.getElementById('resAdnHorasReduzidas').innerText = horasReduzidas.toFixed(4);
-        document.getElementById('resAdnComReducao').innerText = formatarDinheiro(adnComReducao);
-        document.getElementById('resDsrAdnComReducao').innerText = formatarDinheiro(dsrAdnComReducao);
-        
-        document.getElementById('resAdnDiferenca').innerText = formatarDinheiro(adnDiferenca);
-    }
-</script>
+        // --- FIREBASE: ABRIR EXTRATO ---
+        function abrirExtrato(key, data) {
+            extratoDB = data.extratoDB || [];
+            configsGlobais = data.configsGlobais || {};
+            
+            document.getElementById('mesReferencia').value = data.mesRef || key;
+            document.getElementById('cfgDivHoras').value = data.cfgDivHoras || 220;
+            document.getElementById('cfgPercNoturno').value = data.cfgPercNoturno || 20;
+            
+            document.getElementById('importSection').classList.add('hidden'); // Esconde importador pois já carregou
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-editor').classList.remove('hidden');
+            document.getElementById('navStatus').classList.remove('hidden');
+            
+            renderizarGrid();
+        }
 
+        // --- FIREBASE: SALVAR EXTRATO ---
+        async function salvarNoFirebase() {
+            const mesRef = document.getElementById('mesReferencia').value.trim();
+            if (!mesRef) {
+                alert("Por favor, informe o Mês de Referência (Ex: 01/2026) no topo da tela antes de salvar.");
+                document.getElementById('mesReferencia').focus();
+                return;
+            }
+
+            const safeKey = mesRef.replace(/[^a-zA-Z0-9-]/g, '-');
+            
+            const btn = document.getElementById('btnSalvar');
+            const btnOriginalText = btn.innerHTML;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SALVANDO...`;
+            btn.disabled = true;
+
+            const payload = {
+                mesRef: mesRef,
+                cfgDivHoras: document.getElementById('cfgDivHoras').value,
+                cfgPercNoturno: document.getElementById('cfgPercNoturno').value,
+                extratoDB: extratoDB,
+                configsGlobais: configsGlobais,
+                dataAtualizacao: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch(`${DB_URL}/${safeKey}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if(response.ok) {
+                    btn.innerHTML = "✔️ SALVO COM SUCESSO";
+                    btn.classList.replace('bg-emerald-600', 'bg-blue-600');
+                    btn.classList.replace('border-emerald-500', 'border-blue-500');
+                    setTimeout(() => {
+                        btn.innerHTML = btnOriginalText;
+                        btn.disabled = false;
+                        btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+                        btn.classList.replace('border-blue-500', 'border-emerald-500');
+                    }, 3000);
+                } else {
+                    throw new Error("Falha na gravação. Código: " + response.status);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao salvar no Firebase. Verifique sua conexão e o link do banco.");
+                btn.innerHTML = btnOriginalText;
+                btn.disabled = false;
+            }
+        }
+
+
+        // =========================================================================
+        // MOTOR DE EXTRAÇÃO E CÁLCULO (MANTIDO DO SEU ÚLTIMO FEEDBACK PERFEITO)
+        // =========================================================================
+
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const dropText = document.getElementById('dropText');
+
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
+        dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
+        dropZone.ondrop = (e) => { e.preventDefault(); processarArquivos(e.dataTransfer.files); };
+        fileInput.onchange = (e) => processarArquivos(e.target.files);
+
+        async function processarArquivos(files) {
+            dropText.innerHTML = `<svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Lendo arquivo... Aguarde.`;
+            try {
+                for (let file of files) {
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const arrayBuffer = await file.arrayBuffer();
+
+                    if (ext === 'pdf') {
+                        await extrairDoPDF(arrayBuffer);
+                    } else {
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
+                        extrairMatriz(rows);
+                    }
+                }
+                renderizarGrid();
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao processar o arquivo. Verifique o console.");
+            }
+            dropText.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)`;
+        }
+
+        function parseMoney(val) {
+            if (!val) return null;
+            let str = val.toString().trim();
+            if (str.includes(':') || str.includes('/') || /[a-zA-Z]{3,}/.test(str)) return null; 
+            let cleaned = str.replace(/[PDR$\s]/gi, '').trim();
+            if (cleaned.includes(',') && cleaned.includes('.')) cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+            else if (cleaned.includes(',')) cleaned = cleaned.replace(',', '.');
+            let n = parseFloat(cleaned);
+            return isNaN(n) ? null : n;
+        }
+
+        function parseTimeAndDecimal(val) {
+            if (!val) return 0;
+            let str = val.toString().trim();
+            let match = str.match(/^(\d+):(\d{2})/);
+            if (match) return parseInt(match[1]) + (parseInt(match[2]) / 60); 
+            let num = parseMoney(str);
+            return num !== null ? num : 0;
+        }
+
+        function validarFiltroEstrito(descRaw) {
+            const d = descRaw.toUpperCase().trim();
+            let prov = PROVENTOS_PERMITIDOS.find(v => d.includes(v));
+            if (prov) return { status: 'OK', tipo: 'PROVENTO', nomeMatch: prov };
+            let desc = DESCONTOS_PERMITIDOS.find(v => d.includes(v));
+            if (desc) return { status: 'OK', tipo: 'DESCONTO', nomeMatch: desc };
+            return { status: 'IGNORAR' };
+        }
+
+        function definirCategoriaLogica(nomeMatch) {
+            const n = nomeMatch;
+            if (n === "DIAS NORMAIS") return 'BASE';
+            if (n === "HORAS EXTRAS 50%") return 'HE';
+            if (n === "ADICIONAL NOTURNO 20%") return 'ADIC_NOT';
+            if (n === "DIAS FERIAS") return 'FERIAS_DIAS';
+            if (n === "1/3 DAS FERIAS") return 'FERIAS_TERCO';
+            if (n.includes("MEDIA") || n.includes("MÉDIA") || n.includes("DIFERENCA DE 1/3") || n.includes("DIFERENÇA DE 1/3")) return 'MEDIA_PROP';
+            if (n === "REFLEXO EXTRAS DSR" || n.includes("REFLEXO HORAS ADIC. NOT")) return 'DSR_PROV';
+            if (n === "DIAS FALTAS") return 'FALTA_DIA';
+            if (n === "HORAS FALTAS PARCIAL") return 'FALTA_HORA';
+            if (n === "DIAS FALTAS DSR") return 'DSR_DESC';
+            return 'DESCONHECIDO';
+        }
+
+        async function extrairDoPDF(arrayBuffer) {
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            let lines = [];
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const items = textContent.items;
+
+                let yMap = {};
+                items.forEach(item => {
+                    let y = Math.round(item.transform[5]);
+                    if (!yMap[y]) yMap[y] = [];
+                    yMap[y].push(item);
+                });
+
+                let yKeys = Object.keys(yMap).sort((a, b) => b - a); 
+                yKeys.forEach(y => {
+                    let rowItems = yMap[y].sort((a, b) => a.transform[4] - b.transform[4]); 
+                    let rowStr = rowItems.map(i => i.str.trim()).filter(s => s !== "");
+                    if (rowStr.length > 0) lines.push(rowStr);
+                });
+            }
+            extrairMatriz(lines);
+        }
+
+        function extrairMatriz(rows) {
+            let nomeAtual = "";
+            for (let i = 0; i < rows.length; i++) {
+                let r = rows[i];
+                if (!r || !Array.isArray(r)) {
+                    if (typeof r === 'object') r = Object.values(r);
+                    else continue;
+                }
+
+                let rUpper = r.map(c => c ? c.toString().toUpperCase().trim() : "");
+                let rowJoined = rUpper.join(" ");
+
+                if (rowJoined.includes("EMPR.:") || rUpper[0] === "EMPR.:") {
+                    let fullStr = rowJoined.split("EMPR.:")[1] || rowJoined;
+                    nomeAtual = fullStr.split("SITUAÇÃO:")[0].trim();
+                    nomeAtual = nomeAtual.replace(/^\d+\s+/, '').trim();
+                    
+                    if (!configsGlobais[nomeAtual]) {
+                        configsGlobais[nomeAtual] = { sAnt: 0, sNov: 0, diasMes: 30, qtdDsr: 5 };
+                    }
+                    continue;
+                }
+
+                if (!nomeAtual || rowJoined.includes("LÍQUIDO:")) continue;
+
+                if (rowJoined.includes("SALÁRIO:")) {
+                    let idxSal = rUpper.findIndex(c => c.includes("SALÁRIO:"));
+                    let sValStr = "";
+                    if (rUpper[idxSal] === "SALÁRIO:") sValStr = r[idxSal + 1];
+                    else sValStr = rUpper[idxSal].split("SALÁRIO:")[1];
+
+                    let sNum = parseMoney(sValStr);
+                    if (sNum !== null) {
+                        configsGlobais[nomeAtual].sAnt = sNum;
+                        if (configsGlobais[nomeAtual].sNov === 0) configsGlobais[nomeAtual].sNov = sNum;
+                    }
+                    continue;
+                }
+
+                for (let c = 0; c < rUpper.length; c++) {
+                    let cellStr = rUpper[c];
+                    let analise = validarFiltroEstrito(cellStr);
+                    
+                    if (analise.status === 'OK') {
+                        let isDesc = (analise.tipo === 'DESCONTO');
+                        let vAnt = 0;
+                        let qtdRaw = "0";
+                        let numBuffer = [];
+                        let achouPD = false;
+
+                        for (let k = c + 1; k < rUpper.length; k++) {
+                            let nextCell = rUpper[k];
+                            if (nextCell === "") continue;
+
+                            if (nextCell === 'P' || nextCell === 'D' || nextCell.endsWith(' P') || nextCell.endsWith(' D')) {
+                                achouPD = true;
+                                if (nextCell.length > 1 && parseMoney(nextCell) !== null) {
+                                    vAnt = parseMoney(nextCell);
+                                } else if (numBuffer.length > 0) {
+                                    vAnt = numBuffer[numBuffer.length - 1].val;
+                                }
+
+                                if (nextCell.length > 1 && numBuffer.length > 0) {
+                                    qtdRaw = numBuffer[numBuffer.length - 1].raw;
+                                } else if (numBuffer.length > 1) {
+                                    qtdRaw = numBuffer[numBuffer.length - 2].raw;
+                                }
+                                c = k; 
+                                break;
+                            }
+
+                            let parsedNum = parseMoney(nextCell);
+                            if (parsedNum !== null || nextCell.includes(':')) {
+                                numBuffer.push({ raw: nextCell, val: parsedNum !== null ? parsedNum : nextCell });
+                            } else if (/[A-Z]{3,}/.test(nextCell)) {
+                                if (numBuffer.length > 0) vAnt = numBuffer[numBuffer.length - 1].val;
+                                if (numBuffer.length > 1) qtdRaw = numBuffer[numBuffer.length - 2].raw;
+                                c = k - 1; 
+                                break;
+                            }
+                        }
+
+                        if (!achouPD && numBuffer.length > 0 && vAnt === 0) {
+                            vAnt = numBuffer[numBuffer.length - 1].val;
+                            if (numBuffer.length > 1) qtdRaw = numBuffer[numBuffer.length - 2].raw;
+                        }
+
+                        if (vAnt !== 0 || qtdRaw !== "0") {
+                            vAnt = Math.abs(vAnt);
+                            if (isDesc) vAnt = -vAnt;
+
+                            let qtdDec = parseTimeAndDecimal(qtdRaw);
+                            let qtdCalculo = qtdDec;
+                            let categoriaMatematica = definirCategoriaLogica(analise.nomeMatch);
+                            
+                            if (categoriaMatematica === 'ADIC_NOT') qtdCalculo = qtdDec * 1.142857; 
+
+                            if (categoriaMatematica === 'BASE' && qtdCalculo >= 20 && qtdCalculo <= 31) {
+                                configsGlobais[nomeAtual].diasMes = Math.round(qtdCalculo);
+                            }
+
+                            extratoDB.push({
+                                id: Math.random().toString(36).substr(2, 9),
+                                nome: nomeAtual,
+                                descExata: analise.nomeMatch,
+                                cat: categoriaMatematica,
+                                isDesc: isDesc,
+                                qtdLida: qtdRaw,
+                                qtdCalc: qtdCalculo,
+                                divisorLinha: null,
+                                vAnt: vAnt,
+                                vNov: 0,
+                                diff: 0
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        function renderizarGrid() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            const grouped = {};
+            extratoDB.forEach(v => {
+                if (!grouped[v.nome]) grouped[v.nome] = [];
+                grouped[v.nome].push(v);
+            });
+
+            Object.keys(grouped).forEach(nome => {
+                const verbas = grouped[nome];
+                const cfg = configsGlobais[nome];
+                const fId = Math.random().toString(36).substr(2, 9);
+
+                const trMaster = document.createElement('tr');
+                trMaster.className = "bg-slate-800 text-white cursor-pointer hover:bg-slate-700 transition";
+                trMaster.id = "master_" + fId;
+                trMaster.onclick = (e) => {
+                    if(e.target.closest('input') || e.target.closest('button')) return;
+                    document.getElementById("det_" + fId).classList.toggle("hidden");
+                    document.getElementById("arr_" + fId).classList.toggle("rotate-180");
+                };
+
+                trMaster.innerHTML = `
+                    <td class="p-3 rounded-tl-lg border-b border-slate-700">
+                        <div class="flex items-center gap-2">
+                            <svg id="arr_${fId}" class="w-4 h-4 text-slate-400 transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <span class="font-black text-xs uppercase truncate w-[180px] block" title="${nome}">${nome}</span>
+                        </div>
+                    </td>
+                    <td class="p-2 border-b border-slate-700" onclick="event.stopPropagation()">
+                        <div class="flex items-center gap-4 text-[10px]">
+                            <div><span class="text-slate-400 block mb-0.5">Salário Antigo</span><span class="font-mono font-bold text-slate-200">R$ ${cfg.sAnt.toFixed(2)}</span></div>
+                            <div>
+                                <span class="text-blue-400 font-bold block mb-0.5">Novo Salário</span>
+                                <input type="number" step="0.01" value="${cfg.sNov.toFixed(2)}" class="input-box bg-blue-900/50 text-blue-100 border-blue-500/50 w-24 text-center focus:bg-blue-800" oninput="sincronizarConfig('${nome}', 'sNov', this.value)">
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block mb-0.5">Divisor (Dias)</span>
+                                <input type="number" value="${cfg.diasMes}" class="input-box bg-slate-700 text-slate-200 border-slate-500 w-16 text-center focus:bg-slate-600" oninput="sincronizarConfig('${nome}', 'diasMes', this.value)">
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block mb-0.5">Dias DSR</span>
+                                <input type="number" value="${cfg.qtdDsr}" class="input-box bg-slate-700 text-slate-200 border-slate-500 w-16 text-center focus:bg-slate-600" oninput="sincronizarConfig('${nome}', 'qtdDsr', this.value)">
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-2 border-b border-slate-700 text-right w-[150px]">
+                        <span class="text-[10px] text-slate-400 uppercase block mb-0.5">Total da Diferença</span>
+                        <span class="font-black text-emerald-400 text-base" id="total_${fId}">R$ 0,00</span>
+                    </td>
+                    <td class="p-2 rounded-tr-lg border-b border-slate-700 text-center w-[50px]">
+                        <button onclick="removerFuncionario('${nome}')" title="Excluir Funcionário" class="bg-slate-600 hover:bg-red-500 text-white p-1.5 rounded transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(trMaster);
+
+                const trDetail = document.createElement('tr');
+                trDetail.id = "det_" + fId;
+                trDetail.className = "bg-white hidden border-b-4 border-slate-300";
+                
+                let htmlVerbas = `
+                    <td colspan="4" class="p-0">
+                        <table class="w-full text-left table-custom">
+                            <thead>
+                                <tr>
+                                    <th class="w-[20%] text-left pl-10 bg-slate-100 text-slate-600 border-b border-slate-300">Verba Filtrada</th>
+                                    <th class="w-[8%] text-center bg-slate-100 text-slate-600 border-b border-slate-300">Qtd Original</th>
+                                    <th class="w-[8%] text-center bg-slate-100 text-indigo-700 border-b border-slate-300">Qtd Efetiva</th>
+                                    <th class="w-[8%] text-center bg-amber-50 text-amber-700 border-x border-b border-amber-200">Divisor</th>
+                                    <th class="w-[8%] text-right bg-slate-100 text-slate-600 border-b border-slate-300">Valor Antigo</th>
+                                    <th class="w-[8%] text-right bg-slate-100 text-emerald-700 border-b border-slate-300">Novo Calculado</th>
+                                    <th class="w-[8%] text-right bg-slate-100 text-emerald-800 border-b border-slate-300">Diferença</th>
+                                    <th class="w-[5%] text-center bg-slate-100 text-slate-600 border-b border-slate-300">Excluir</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                verbas.forEach(v => {
+                    let badgeClass = v.isDesc ? 'text-red-700 bg-red-100 border-red-200' : 'text-blue-700 bg-blue-100 border-blue-200';
+                    let txtTipo = v.isDesc ? 'Desc (-)' : 'Prov (+)';
+                    
+                    let isHora = ['HE', 'ADIC_NOT', 'ATRASO', 'FALTA_HORA'].includes(v.cat);
+                    
+                    if (!v.divisorLinha) {
+                        if (v.cat === 'DSR_PROV') v.divisorLinha = Math.max(1, cfg.diasMes - cfg.qtdDsr);
+                        else v.divisorLinha = isHora ? (document.getElementById('cfgDivHoras').value || 220) : cfg.diasMes;
+                    }
+                    if (v.cat === 'DSR_PROV' && v.qtdCalc === 0) {
+                        v.qtdCalc = cfg.qtdDsr;
+                    }
+                    
+                    let divHtml = '';
+                    let calcQtdHTML = '';
+                    
+                    if (v.cat === 'FERIAS_TERCO') {
+                        divHtml = `<input type="text" value="Soma / 3" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled>`;
+                        calcQtdHTML = `<input type="text" value="-" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled>`;
+                    } else {
+                        divHtml = `<input type="number" step="0.01" value="${v.divisorLinha}" class="input-box text-center bg-amber-50/50 text-amber-700 border-amber-200 font-bold inp-divisor" oninput="atualizarDivisorManual('${v.id}', this.value)">`;
+                        calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-transparent border-none text-indigo-700 font-bold" oninput="atualizarQtdManual('${v.id}', this.value)">`;
+                    }
+
+                    htmlVerbas += `
+                        <tr id="row_${v.id}" data-nome="${nome}" class="hover:bg-slate-50 transition border-b border-slate-100">
+                            <td class="pl-10 py-2.5">
+                                <div class="font-bold text-slate-700 text-[10px] uppercase truncate" title="${v.descExata}">${v.descExata}</div>
+                                <span class="text-[9px] font-bold px-1.5 rounded border ${badgeClass}">${txtTipo}</span>
+                            </td>
+                            <td class="text-center font-mono text-slate-500 text-[10px]">${v.qtdLida}</td>
+                            
+                            <td class="text-center bg-indigo-50/30">${calcQtdHTML}</td>
+                            <td class="text-center border-x border-amber-100 bg-amber-50/10 p-1">${divHtml}</td>
+
+                            <td class="text-right">
+                                <input type="number" step="0.01" value="${v.vAnt.toFixed(2)}" class="input-box text-slate-600 bg-white border border-slate-200 shadow-sm inp-v-ant focus:border-blue-400" oninput="recalcularTudo()">
+                            </td>
+                            <td class="text-right bg-emerald-50/20 align-middle">
+                                <div class="val-nov font-bold text-emerald-700 text-[11px] pr-2">R$ 0,00</div>
+                            </td>
+                            <td class="text-right bg-emerald-50/50 align-middle border-l border-emerald-100">
+                                <div class="val-diff font-black text-slate-700 text-[12px] pr-2">R$ 0,00</div>
+                            </td>
+                            <td class="text-center align-middle">
+                                <button onclick="removerVerba('${v.id}')" title="Excluir Verba" class="text-slate-300 hover:text-red-500 bg-white hover:bg-red-50 p-1.5 rounded-lg border border-slate-200 transition shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                htmlVerbas += `</tbody></table></td>`;
+                trDetail.innerHTML = htmlVerbas;
+                tbody.appendChild(trDetail);
+            });
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('totalFuncs').innerText = Object.keys(grouped).length;
+            recalcularTudo();
+        }
+
+        // --- SINCRONIZAÇÃO E MATEMÁTICA ---
+        function sincronizarConfig(nome, campo, valor) {
+            let num = parseFloat(valor) || 0;
+            configsGlobais[nome][campo] = num;
+            
+            if (campo === 'diasMes') {
+                document.querySelectorAll(`tr[data-nome="${nome}"]`).forEach(row => {
+                    const vId = row.id.split('row_')[1];
+                    const v = extratoDB.find(x => x.id === vId);
+                    if (v && ['BASE', 'FERIAS_DIAS', 'FALTA_DIA', 'DSR_DESC'].includes(v.cat)) {
+                        const inpDiv = row.querySelector('.inp-divisor');
+                        if (inpDiv) inpDiv.value = num;
+                    }
+                });
+            }
+            if (campo === 'qtdDsr') {
+                document.querySelectorAll(`tr[data-nome="${nome}"]`).forEach(row => {
+                    const vId = row.id.split('row_')[1];
+                    const v = extratoDB.find(x => x.id === vId);
+                    if (v && v.cat === 'DSR_PROV') {
+                        let cfg = configsGlobais[nome];
+                        let diasUteis = Math.max(1, cfg.diasMes - cfg.qtdDsr);
+                        const inpDiv = row.querySelector('.inp-divisor');
+                        if (inpDiv) inpDiv.value = diasUteis;
+                        
+                        const inpQtd = row.querySelector('.text-indigo-700');
+                        if (inpQtd && v.qtdCalc === 0) inpQtd.value = num;
+                    }
+                });
+            }
+            recalcularTudo();
+        }
+
+        function atualizarQtdManual(id, val) {
+            let v = extratoDB.find(x => x.id === id);
+            if (v) v.qtdCalc = parseFloat(val) || 0;
+            recalcularTudo();
+        }
+
+        function atualizarDivisorManual(id, val) {
+            let v = extratoDB.find(x => x.id === id);
+            if (v) v.divisorLinha = parseFloat(val) || 1; 
+            recalcularTudo();
+        }
+
+        function aplicarAumentoMassa() {
+            const perc = parseFloat(document.getElementById('cfgAumento').value);
+            if (isNaN(perc) || perc <= 0) return;
+            const fator = 1 + (perc / 100);
+            
+            Object.keys(configsGlobais).forEach(nome => {
+                configsGlobais[nome].sNov = configsGlobais[nome].sAnt * fator;
+            });
+            renderizarGrid(); 
+        }
+
+        function recalcularTudo() {
+            const divHorasGlob = parseFloat(document.getElementById('cfgDivHoras').value) || 220;
+            const pNoturno = parseFloat(document.getElementById('cfgPercNoturno').value) || 20;
+
+            let somaVarsBase = {}; 
+            let somaParaTerco = {}; 
+            let totalPorFuncionario = {};
+
+            extratoDB.forEach(v => {
+                const row = document.getElementById('row_' + v.id);
+                if (!row) return;
+
+                v.vAnt = parseFloat(row.querySelector('.inp-v-ant').value) || 0;
+                if (v.isDesc && v.vAnt > 0) v.vAnt = -Math.abs(v.vAnt);
+
+                const cfg = configsGlobais[v.nome];
+                v.vNov = 0;
+                let sNov = cfg.sNov;
+
+                const inpDiv = row.querySelector('.inp-divisor');
+                let divLinha = inpDiv && !inpDiv.disabled ? (parseFloat(inpDiv.value) || 1) : 1;
+                v.divisorLinha = divLinha;
+
+                if (v.cat === 'BASE' || v.cat === 'FERIAS_DIAS') {
+                    v.vNov = (sNov / divLinha) * v.qtdCalc;
+                    if (v.cat === 'FERIAS_DIAS') {
+                        somaParaTerco[v.nome] = (somaParaTerco[v.nome] || 0) + v.vNov;
+                    }
+                } 
+                else if (v.cat === 'HE') {
+                    let pExtra = 1.5;
+                    let m = v.descExata.match(/(\d+)%/);
+                    if (m) pExtra = 1 + (parseInt(m[1]) / 100);
+                    v.vNov = (sNov / divLinha) * pExtra * v.qtdCalc;
+                    somaVarsBase[v.nome] = (somaVarsBase[v.nome] || 0) + v.vNov;
+                }
+                else if (v.cat === 'ADIC_NOT') {
+                    v.vNov = (sNov / divLinha) * (pNoturno / 100) * v.qtdCalc;
+                    somaVarsBase[v.nome] = (somaVarsBase[v.nome] || 0) + v.vNov;
+                }
+                else if (v.cat === 'FALTA_DIA') {
+                    v.vNov = -Math.abs((sNov / divLinha) * v.qtdCalc);
+                }
+                else if (v.cat === 'FALTA_HORA' || v.cat === 'ATRASO') {
+                    v.vNov = -Math.abs((sNov / divLinha) * v.qtdCalc);
+                }
+                else if (v.cat === 'MEDIA_PROP') {
+                    v.vNov = cfg.sAnt > 0 ? v.vAnt * (sNov / cfg.sAnt) : v.vAnt;
+                    if (v.descExata.includes("FERIAS") || v.descExata.includes("FÉRIAS")) {
+                        somaParaTerco[v.nome] = (somaParaTerco[v.nome] || 0) + v.vNov;
+                    }
+                }
+
+                if (v.isDesc && v.vNov > 0) v.vNov = -v.vNov; 
+            });
+
+            extratoDB.forEach(v => {
+                const row = document.getElementById('row_' + v.id);
+                if (!row) return;
+
+                const cfg = configsGlobais[v.nome];
+                let sNov = cfg.sNov;
+                let divLinha = v.divisorLinha || 30;
+
+                if (v.cat === 'FERIAS_TERCO') {
+                    let acumuladoFerias = somaParaTerco[v.nome] || 0;
+                    v.vNov = acumuladoFerias * 0.33333333; 
+                } 
+                else if (v.cat === 'DSR_DESC') {
+                    v.vNov = -Math.abs((sNov / divLinha) * v.qtdCalc);
+                } else if (v.cat === 'DSR_PROV') {
+                    let varSum = somaVarsBase[v.nome] || 0;
+                    v.vNov = (varSum / divLinha) * v.qtdCalc;
+                }
+
+                if (v.isDesc && v.vNov > 0) v.vNov = -v.vNov;
+                v.diff = v.vNov - v.vAnt;
+
+                totalPorFuncionario[v.nome] = (totalPorFuncionario[v.nome] || 0) + v.diff;
+
+                row.querySelector('.val-nov').innerText = v.vNov.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const elDiff = row.querySelector('.val-diff');
+                elDiff.innerText = v.diff.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                if (v.diff < -0.01) { elDiff.classList.add('text-red-600'); elDiff.classList.remove('text-emerald-700', 'text-slate-700'); }
+                else if (v.diff > 0.01) { elDiff.classList.add('text-emerald-700'); elDiff.classList.remove('text-red-600', 'text-slate-700'); }
+                else { elDiff.classList.add('text-slate-700'); elDiff.classList.remove('text-red-600', 'text-emerald-700'); }
+            });
+
+            Object.keys(configsGlobais).forEach(nome => {
+                let total = totalPorFuncionario[nome] || 0;
+                document.querySelectorAll('tr[id^="master_"]').forEach(tr => {
+                    if (tr.querySelector('span[title]').innerText === nome) {
+                        const elTot = tr.querySelector('span[id^="total_"]');
+                        elTot.innerText = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        if (total < -0.01) { elTot.classList.add('text-red-400'); elTot.classList.remove('text-emerald-400'); }
+                        else { elTot.classList.add('text-emerald-400'); elTot.classList.remove('text-red-400'); }
+                    }
+                });
+            });
+        }
+
+        function removerVerba(id) {
+            document.getElementById('row_' + id)?.remove();
+            let verba = extratoDB.find(v => v.id === id);
+            extratoDB = extratoDB.filter(v => v.id !== id);
+            
+            if (verba && !extratoDB.some(v => v.nome === verba.nome)) {
+                removerFuncionario(verba.nome);
+            } else {
+                recalcularTudo();
+            }
+        }
+
+        function removerFuncionario(nome) {
+            extratoDB = extratoDB.filter(v => v.nome !== nome);
+            delete configsGlobais[nome];
+            renderizarGrid();
+        }
+
+        function exportarCSV() {
+            let csv = "\ufeffNomeFuncionario;SalarioAntigo;SalarioNovo;DiasMes;QtdDSR;DescricaoVerba;QtdCalculo;DivisorDaFormula;Tipo;ValorAntigo;NovoCalculado;DiferencaAPagar\n";
+            
+            extratoDB.forEach(v => {
+                const cfg = configsGlobais[v.nome];
+                const sA = cfg.sAnt.toFixed(2).replace('.', ',');
+                const sN = cfg.sNov.toFixed(2).replace('.', ',');
+                const dMes = cfg.diasMes;
+                const dsr = cfg.qtdDsr;
+                
+                const qtdCalc = v.cat === 'FERIAS_TERCO' ? "0" : v.qtdCalc.toFixed(4).replace('.', ',');
+                const divLinha = v.cat === 'FERIAS_TERCO' ? "0" : (v.divisorLinha ? v.divisorLinha.toString().replace('.', ',') : '');
+                
+                const tipo = v.isDesc ? 'Desconto' : 'Provento';
+                const vA = v.vAnt.toFixed(2).replace('.', ',');
+                const vN = v.vNov.toFixed(2).replace('.', ',');
+                const diff = v.diff.toFixed(2).replace('.', ',');
+                
+                csv += `"${v.nome}";${sA};${sN};${dMes};${dsr};"${v.descExata}";${qtdCalc};"${divLinha}";"${tipo}";${vA};${vN};${diff}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Extrato_Dissidio_Limpo_${new Date().getTime()}.csv`;
+            link.click();
+        }
+
+        function limparTabela() { 
+            extratoDB = []; configsGlobais = {};
+            document.getElementById('tableBody').innerHTML = '';
+            document.getElementById('resultsSection').classList.add('hidden'); 
+            document.getElementById('fileInput').value = '';
+            document.getElementById('cfgAumento').value = '';
+            document.getElementById('totalFuncs').innerText = "0";
+        }
+    </script>
 </body>
 </html>
