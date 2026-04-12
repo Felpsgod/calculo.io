@@ -132,11 +132,11 @@
                     </span>
                     <div class="flex gap-3">
                         <button onclick="limparTabela()" class="text-slate-500 hover:text-red-600 font-bold text-[10px] uppercase tracking-wider transition mr-4">Limpar Painel</button>
-                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2 rounded-lg font-bold shadow-md transition text-xs flex items-center gap-2">
+                        <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition text-xs flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             EXPORTAR EXCEL
                         </button>
-                        <button onclick="salvarNoFirebase()" id="btnSalvar" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-black shadow-md transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 text-xs border border-emerald-500">
+                        <button onclick="salvarNoFirebase()" id="btnSalvar" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-black shadow-md transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 text-xs border border-emerald-500">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 002-2v-4M17 9l-5 5m0 0l-5-5m5 5V3"></path></svg>
                             SALVAR NA NUVEM
                         </button>
@@ -151,18 +151,56 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         // --------------------------------------------------------------------------------
-        // CONFIGURAÇÃO DO FIREBASE (API REST)
+        // CONFIGURAÇÃO DO FIREBASE
         // --------------------------------------------------------------------------------
         const DB_URL = "https://teeste-e33ff-default-rtdb.firebaseio.com/extratos";
 
-        const PROVENTOS_PERMITIDOS = [
-            "DIAS NORMAIS", "HORAS EXTRAS 50%", "REFLEXO EXTRAS DSR", "DIFERENCA DE 1/3 DE FERIAS",
-            "DIFERENCA MEDIA HORA FERIAS", "DIFERENCA MEDIA VALOR FERIAS", "REFLEXO HORAS ADIC. NOT DSR",
-            "REFLEXO HORAS ADIC. NOT", "MEDIA VALOR FERIAS", "MEDIA HORAS FERIAS", "1/3 DAS FERIAS", 
-            "DIAS FERIAS", "ADICIONAL NOTURNO 20%"
+        // ==========================================
+        // LISTAS DE FILTRO
+        // ==========================================
+        const DESCONTOS_PERMITIDOS = [
+            "ADIANTAMENTO 13º SALARIO",
+            "ADIANTAMENTO 13O SALARIO",
+            "ADIANTAMENTO 13 SALARIO",
+            "ADIANTAMENTO 13",
+            "HORAS FALTAS PARCIAL", 
+            "DIAS FALTAS DSR", 
+            "DIAS FALTAS"
         ];
 
-        const DESCONTOS_PERMITIDOS = ["HORAS FALTAS PARCIAL", "DIAS FALTAS DSR", "DIAS FALTAS"];
+        const PROVENTOS_PERMITIDOS = [
+            "DIFERENCA DE 1/3 DE FERIAS",
+            "DIFERENCA MEDIA HORA FERIAS", 
+            "DIFERENCA MEDIA VALOR FERIAS", 
+            "REFLEXO HORAS ADIC. NOT DSR",
+            "REFLEXO HORAS ADIC. NOT", 
+            "REFLEXO EXTRAS DSR",
+            "MEDIA VALOR FERIAS", 
+            "MEDIA HORAS FERIAS", 
+            "1/3 DAS FERIAS", 
+            "DIAS FERIAS", 
+            "DIAS NORMAIS", 
+            "HORAS EXTRAS", 
+            "ADICIONAL NOTURNO",
+            "MEDIA HORAS 13º ADIANTADO",
+            "MEDIA VALOR 13º ADIANTADO",
+            "MEDIA HORAS 13O ADIANTADO",
+            "MEDIA VALOR 13O ADIANTADO",
+            "MEDIA HORAS 13 ADIANTADO",
+            "MEDIA VALOR 13 ADIANTADO",
+            "13º SALARIO ADIANTADO", 
+            "13O SALARIO ADIANTADO",
+            "13 SALARIO ADIANTADO", 
+            "MEDIA HORAS 13º",
+            "MEDIA VALOR 13º",
+            "MEDIA HORAS 13O",
+            "MEDIA VALOR 13O",
+            "MEDIA HORAS 13", 
+            "MEDIA VALOR 13",
+            "13º SALARIO", 
+            "13O SALARIO",
+            "13 SALARIO"
+        ];
 
         let extratoDB = [];
         let configsGlobais = {}; 
@@ -369,25 +407,36 @@
 
         function validarFiltroEstrito(descRaw) {
             const d = descRaw.toUpperCase().trim();
-            let prov = PROVENTOS_PERMITIDOS.find(v => d.includes(v));
-            if (prov) return { status: 'OK', tipo: 'PROVENTO', nomeMatch: prov };
+            
+            // BLOQUEIO EXPLÍCITO (Blacklist para evitar cruzamentos)
+            if (d.includes("INSS") || d.includes("IRRF") || d.includes("FGTS") || d.includes("BASE") || d.includes("LÍQUIDO") || d.includes("LIQUIDO")) {
+                return { status: 'IGNORAR' };
+            }
+            
             let desc = DESCONTOS_PERMITIDOS.find(v => d.includes(v));
             if (desc) return { status: 'OK', tipo: 'DESCONTO', nomeMatch: desc };
+            
+            let prov = PROVENTOS_PERMITIDOS.find(v => d.includes(v));
+            if (prov) return { status: 'OK', tipo: 'PROVENTO', nomeMatch: prov };
+            
             return { status: 'IGNORAR' };
         }
 
         function definirCategoriaLogica(nomeMatch) {
             const n = nomeMatch;
-            if (n === "DIAS NORMAIS") return 'BASE';
-            if (n === "HORAS EXTRAS 50%") return 'HE';
-            if (n === "ADICIONAL NOTURNO 20%") return 'ADIC_NOT';
-            if (n === "DIAS FERIAS") return 'FERIAS_DIAS';
-            if (n === "1/3 DAS FERIAS") return 'FERIAS_TERCO';
-            if (n.includes("MEDIA") || n.includes("MÉDIA") || n.includes("DIFERENCA DE 1/3") || n.includes("DIFERENÇA DE 1/3")) return 'MEDIA_PROP';
-            if (n === "REFLEXO EXTRAS DSR" || n.includes("REFLEXO HORAS ADIC. NOT")) return 'DSR_PROV';
-            if (n === "DIAS FALTAS") return 'FALTA_DIA';
-            if (n === "HORAS FALTAS PARCIAL") return 'FALTA_HORA';
-            if (n === "DIAS FALTAS DSR") return 'DSR_DESC';
+            if (n.includes("DIAS NORMAIS")) return 'BASE';
+            if (n.includes("HORAS EXTRAS")) return 'HE';
+            if (n.includes("ADICIONAL NOTURNO")) return 'ADIC_NOT';
+            if (n.includes("DIAS FERIAS")) return 'FERIAS_DIAS';
+            if (n.includes("1/3 DAS FERIAS")) return 'FERIAS_TERCO';
+            
+            if (n.includes("MEDIA") || n.includes("MÉDIA") || n.includes("DIFERENCA DE 1/3") || n.includes("DIFERENÇA DE 1/3") || n.includes("13 SALARIO") || n.includes("13º SALARIO") || n.includes("13O SALARIO") || n.includes("ADIANTAMENTO 13")) return 'MEDIA_PROP';
+            
+            if (n.includes("REFLEXO EXTRAS DSR") || n.includes("REFLEXO HORAS ADIC. NOT")) return 'DSR_PROV';
+            
+            if (n.includes("DIAS FALTAS") && !n.includes("DSR")) return 'FALTA_DIA';
+            if (n.includes("HORAS FALTAS PARCIAL")) return 'FALTA_HORA';
+            if (n.includes("DIAS FALTAS DSR")) return 'DSR_DESC';
             return 'DESCONHECIDO';
         }
 
@@ -520,7 +569,7 @@
                             extratoDB.push({
                                 id: Math.random().toString(36).substr(2, 9),
                                 nome: nomeAtual,
-                                descExata: analise.nomeMatch,
+                                descExata: cellStr.substring(0, 45).trim(),
                                 cat: categoriaMatematica,
                                 isDesc: isDesc,
                                 qtdLida: qtdRaw,
@@ -536,7 +585,7 @@
             }
         }
 
-        // --- RENDERIZAÇÃO CASCATA COM BADGES EXPANSIVOS ---
+        // --- RENDERIZAÇÃO ---
         function renderizarGrid() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -552,11 +601,10 @@
                 const cfg = configsGlobais[nome];
                 const fId = Math.random().toString(36).substr(2, 9);
 
-                // --- BADGES FLEXÍVEIS DO ESPAÇO LIVRE ---
-                let badgesHtml = `<div class="flex flex-wrap gap-2 p-1">`;
+                let badgesHtml = `<div class="flex flex-wrap gap-2 p-1 w-full">`;
                 verbas.forEach(v => {
                     badgesHtml += `
-                        <div id="badge_item_${v.id}" class="flex justify-between items-center px-2 py-1.5 rounded-md border bg-slate-50 border-slate-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200">
+                        <div id="badge_item_${v.id}" class="flex justify-between items-center px-2 py-1.5 rounded-md border bg-slate-50 border-slate-200 flex-grow min-w-[130px] shadow-sm transition-colors duration-200">
                             <span id="badge_desc_${v.id}" class="text-[9px] font-bold uppercase truncate pr-2 text-slate-500" title="${v.descExata}">${v.descExata}</span>
                             <span id="badge_diff_${v.id}" class="text-[10px] font-black text-slate-600">R$ 0,00</span>
                         </div>
@@ -564,7 +612,6 @@
                 });
                 badgesHtml += `</div>`;
 
-                // --- LINHA MESTRA ---
                 const trMaster = document.createElement('tr');
                 trMaster.className = "bg-white text-slate-800 cursor-pointer hover:bg-slate-50 transition border-b-2 border-slate-200 shadow-sm";
                 trMaster.id = "master_" + fId;
@@ -575,26 +622,26 @@
                 };
 
                 trMaster.innerHTML = `
-                    <td class="p-3 align-middle w-[16%] border-r border-slate-100">
+                    <td class="p-3 align-middle w-[15%] border-r border-slate-100">
                         <div class="flex items-center gap-2 pl-2">
                             <svg id="arr_${fId}" class="w-4 h-4 text-blue-500 transition-transform rotate-180 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             <span class="font-black text-[11px] uppercase truncate block text-slate-700" title="${nome}">${nome}</span>
                         </div>
                     </td>
-                    <td class="p-2 align-middle w-[24%] border-r border-slate-100 bg-slate-50/50" onclick="event.stopPropagation()">
-                        <div class="flex flex-wrap items-center gap-2.5 text-[10px] justify-start pl-1">
-                            <div><span class="text-slate-500 block mb-0.5">Sal. Antigo</span><span class="font-mono font-bold text-slate-700">R$ ${cfg.sAnt.toFixed(2)}</span></div>
+                    <td class="p-2 align-middle w-[25%] border-r border-slate-100 bg-slate-50/50" onclick="event.stopPropagation()">
+                        <div class="flex flex-wrap items-center gap-2 text-[10px] justify-start pl-1">
+                            <div><span class="text-slate-500 block mb-0.5 font-semibold">Sal. Antigo</span><span class="font-mono font-bold text-slate-700 bg-white border border-slate-200 rounded px-1.5 py-0.5">R$ ${cfg.sAnt.toFixed(2)}</span></div>
                             <div>
                                 <span class="text-blue-600 font-bold block mb-0.5">Sal. Novo</span>
-                                <input type="number" step="0.01" value="${cfg.sNov.toFixed(2)}" class="input-box bg-blue-50 text-blue-700 border border-blue-300 w-16 text-center focus:bg-blue-100 shadow-sm px-1" oninput="sincronizarConfig('${nome}', 'sNov', this.value)">
+                                <input type="number" step="0.01" value="${cfg.sNov.toFixed(2)}" class="input-box bg-blue-50 text-blue-700 border border-blue-300 w-16 text-center focus:bg-blue-100 shadow-sm px-1 py-0.5" oninput="sincronizarConfig('${nome}', 'sNov', this.value)">
                             </div>
                             <div>
-                                <span class="text-slate-500 block mb-0.5">Divisor</span>
-                                <input type="number" value="${cfg.diasMes}" class="input-box bg-white text-slate-700 border border-slate-300 w-12 text-center focus:bg-slate-50 shadow-sm px-1" oninput="sincronizarConfig('${nome}', 'diasMes', this.value)">
+                                <span class="text-slate-500 block mb-0.5 font-semibold">Divisor</span>
+                                <input type="number" value="${cfg.diasMes}" class="input-box bg-white text-slate-700 border border-slate-300 w-12 text-center focus:bg-slate-50 shadow-sm px-1 py-0.5" oninput="sincronizarConfig('${nome}', 'diasMes', this.value)">
                             </div>
                             <div>
-                                <span class="text-slate-500 block mb-0.5">DSR</span>
-                                <input type="number" value="${cfg.qtdDsr}" class="input-box bg-white text-slate-700 border border-slate-300 w-12 text-center focus:bg-slate-50 shadow-sm px-1" oninput="sincronizarConfig('${nome}', 'qtdDsr', this.value)">
+                                <span class="text-slate-500 block mb-0.5 font-semibold">DSR</span>
+                                <input type="number" value="${cfg.qtdDsr}" class="input-box bg-white text-slate-700 border border-slate-300 w-12 text-center focus:bg-slate-50 shadow-sm px-1 py-0.5" oninput="sincronizarConfig('${nome}', 'qtdDsr', this.value)">
                             </div>
                         </div>
                     </td>
@@ -613,7 +660,6 @@
                 `;
                 tbody.appendChild(trMaster);
 
-                // --- LINHA DE DETALHES (Verbas Internas) ---
                 const trDetail = document.createElement('tr');
                 trDetail.id = "det_" + fId;
                 trDetail.className = "bg-slate-50 hidden border-b-4 border-slate-300";
@@ -623,14 +669,14 @@
                         <table class="w-full text-left table-custom">
                             <thead>
                                 <tr>
-                                    <th class="w-[20%] text-left pl-10 bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Verba Filtrada</th>
-                                    <th class="w-[8%] text-center bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Qtd Original</th>
-                                    <th class="w-[8%] text-center bg-slate-200 text-indigo-700 border-b border-slate-300 shadow-inner">Qtd Efetiva</th>
-                                    <th class="w-[8%] text-center bg-amber-100 text-amber-700 border-x border-b border-amber-200 shadow-inner">Divisor</th>
-                                    <th class="w-[8%] text-right bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Valor Antigo</th>
-                                    <th class="w-[8%] text-right bg-slate-200 text-emerald-700 border-b border-slate-300 shadow-inner">Novo Calculado</th>
-                                    <th class="w-[8%] text-right bg-slate-200 text-emerald-800 border-b border-slate-300 shadow-inner">Diferença</th>
-                                    <th class="w-[5%] text-center bg-slate-200 text-slate-600 border-b border-slate-300 shadow-inner">Excluir</th>
+                                    <th class="w-[20%] text-left pl-10 bg-slate-100 text-slate-600 border-b border-slate-300 shadow-inner">Verba Filtrada</th>
+                                    <th class="w-[8%] text-center bg-slate-100 text-slate-600 border-b border-slate-300 shadow-inner">Qtd Original</th>
+                                    <th class="w-[8%] text-center bg-slate-100 text-indigo-700 border-b border-slate-300 shadow-inner">Qtd Efetiva</th>
+                                    <th class="w-[8%] text-center bg-amber-50 text-amber-700 border-x border-b border-amber-200 shadow-inner">Divisor</th>
+                                    <th class="w-[8%] text-right bg-slate-100 text-slate-600 border-b border-slate-300 shadow-inner">Valor Antigo</th>
+                                    <th class="w-[8%] text-right bg-slate-100 text-emerald-700 border-b border-slate-300 shadow-inner">Novo Calculado</th>
+                                    <th class="w-[8%] text-right bg-slate-100 text-emerald-800 border-b border-slate-300 shadow-inner">Diferença</th>
+                                    <th class="w-[5%] text-center bg-slate-100 text-slate-600 border-b border-slate-300 shadow-inner">Excluir</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -656,8 +702,11 @@
                     if (v.cat === 'FERIAS_TERCO') {
                         divHtml = `<input type="text" value="Soma / 3" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled>`;
                         calcQtdHTML = `<input type="text" value="-" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled>`;
+                    } else if (v.cat === 'MEDIA_PROP') {
+                        divHtml = `<input type="text" value="Prop. %" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled title="Ajuste Proporcional ao Dissídio">`;
+                        calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-transparent border-none text-slate-400 font-bold" disabled>`;
                     } else {
-                        divHtml = `<input type="number" step="0.01" value="${v.divisorLinha}" class="input-box text-center bg-amber-50/50 text-amber-700 border-amber-200 font-bold inp-divisor" oninput="atualizarDivisorManual('${v.id}', this.value)">`;
+                        divHtml = `<input type="number" step="0.01" value="${v.divisorLinha}" class="input-box text-center bg-amber-50/50 text-amber-700 border border-amber-200 font-bold inp-divisor" oninput="atualizarDivisorManual('${v.id}', this.value)">`;
                         calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-indigo-50 text-indigo-700 font-bold border border-indigo-200" oninput="atualizarQtdManual('${v.id}', this.value)">`;
                     }
 
@@ -700,7 +749,6 @@
             recalcularTudo();
         }
 
-        // --- CÁLCULOS E REATIVIDADE ---
         function sincronizarConfig(nome, campo, valor) {
             let num = parseFloat(valor) || 0;
             configsGlobais[nome][campo] = num;
@@ -711,7 +759,7 @@
                     const v = extratoDB.find(x => x.id === vId);
                     if (v && ['BASE', 'FERIAS_DIAS', 'FALTA_DIA', 'DSR_DESC'].includes(v.cat)) {
                         const inpDiv = row.querySelector('.inp-divisor');
-                        if (inpDiv) inpDiv.value = num;
+                        if (inpDiv && !inpDiv.disabled) inpDiv.value = num;
                     }
                 });
             }
@@ -726,7 +774,7 @@
                         if (inpDiv) inpDiv.value = diasUteis;
                         
                         const inpQtd = row.querySelector('.text-indigo-700');
-                        if (inpQtd && v.qtdCalc === 0) inpQtd.value = num;
+                        if (inpQtd && v.qtdCalc === 0 && !inpQtd.disabled) inpQtd.value = num;
                     }
                 });
             }
@@ -758,8 +806,7 @@
 
         function recalcularTudo() {
             const divHorasGlob = parseFloat(document.getElementById('cfgDivHoras').value) || 220;
-            const pNoturno = parseFloat(document.getElementById('cfgPercNoturno').value) || 20;
-
+            
             let somaHE = {}; 
             let somaAdicNot = {}; 
             let somaParaTerco = {}; 
@@ -787,13 +834,18 @@
                     }
                 } 
                 else if (v.cat === 'HE') {
-                    let pExtra = 1.5;
-                    let m = v.descExata.match(/(\d+)%/);
+                    let pExtra = 1.5; 
+                    let m = v.descExata.match(/(\d+)%/); 
                     if (m) pExtra = 1 + (parseInt(m[1]) / 100);
                     v.vNov = (sNov / divLinha) * pExtra * v.qtdCalc;
+                    
                     somaHE[v.nome] = (somaHE[v.nome] || 0) + v.vNov;
                 }
                 else if (v.cat === 'ADIC_NOT') {
+                    let pNoturno = parseFloat(document.getElementById('cfgPercNoturno').value) || 20; 
+                    let m = v.descExata.match(/(\d+)%/); 
+                    if (m) pNoturno = parseInt(m[1]);
+                    
                     v.vNov = (sNov / divLinha) * (pNoturno / 100) * v.qtdCalc;
                     somaAdicNot[v.nome] = (somaAdicNot[v.nome] || 0) + v.vNov;
                 }
@@ -848,7 +900,6 @@
                 let colorClass = v.diff < -0.01 ? 'text-red-600' : (v.diff > 0.01 ? 'text-emerald-700' : 'text-slate-500');
                 elDiff.className = `val-diff font-black text-[12px] pr-2 ${colorClass}`;
 
-                // --- Atualiza Cores das Flags no Header ---
                 const elBadgeItem = document.getElementById(`badge_item_${v.id}`);
                 const elBadgeDiff = document.getElementById(`badge_diff_${v.id}`);
                 const elBadgeDesc = document.getElementById(`badge_desc_${v.id}`);
@@ -860,22 +911,21 @@
                     elBadgeDiff.innerText = diffFormat;
                     
                     if (v.diff < -0.01) {
-                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-red-50 border-red-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200";
+                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-red-50 border-red-200 flex-grow min-w-[130px] shadow-sm transition-colors duration-200";
                         elBadgeDesc.className = "text-[9px] font-bold uppercase truncate pr-2 text-red-600";
                         elBadgeDiff.className = "text-[10px] font-black text-red-700";
                     } else if (v.diff > 0.01) {
-                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-emerald-50 border-emerald-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200";
+                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-emerald-50 border-emerald-200 flex-grow min-w-[130px] shadow-sm transition-colors duration-200";
                         elBadgeDesc.className = "text-[9px] font-bold uppercase truncate pr-2 text-emerald-600";
                         elBadgeDiff.className = "text-[10px] font-black text-emerald-700";
                     } else {
-                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-slate-50 border-slate-200 flex-1 min-w-[130px] shadow-sm transition-colors duration-200";
+                        elBadgeItem.className = "flex justify-between items-center px-2 py-1.5 rounded-md border bg-slate-50 border-slate-200 flex-grow min-w-[130px] shadow-sm transition-colors duration-200";
                         elBadgeDesc.className = "text-[9px] font-bold uppercase truncate pr-2 text-slate-500";
                         elBadgeDiff.className = "text-[10px] font-black text-slate-600";
                     }
                 }
             });
 
-            // Atualiza Header do Funcionário (Total Líquido)
             Object.keys(configsGlobais).forEach(nome => {
                 let total = totalPorFuncionario[nome] || 0;
                 document.querySelectorAll('tr[id^="master_"]').forEach(tr => {
@@ -918,8 +968,8 @@
                 const dMes = cfg.diasMes;
                 const dsr = cfg.qtdDsr;
                 
-                const qtdCalc = v.cat === 'FERIAS_TERCO' ? "0" : v.qtdCalc.toFixed(4).replace('.', ',');
-                const divLinha = v.cat === 'FERIAS_TERCO' ? "0" : (v.divisorLinha ? v.divisorLinha.toString().replace('.', ',') : '');
+                const qtdCalc = v.cat === 'FERIAS_TERCO' || v.cat === 'MEDIA_PROP' ? "0" : v.qtdCalc.toFixed(4).replace('.', ',');
+                const divLinha = v.cat === 'FERIAS_TERCO' || v.cat === 'MEDIA_PROP' ? "0" : (v.divisorLinha ? v.divisorLinha.toString().replace('.', ',') : '');
                 
                 const tipo = v.isDesc ? 'Desconto' : 'Provento';
                 const vA = v.vAnt.toFixed(2).replace('.', ',');
@@ -932,7 +982,7 @@
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `Extrato_Dissidio_Limpo_${new Date().getTime()}.csv`;
+            link.download = `Extrato_Dissidio_Analitico_${new Date().getTime()}.csv`;
             link.click();
         }
 
