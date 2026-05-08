@@ -32,11 +32,21 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @media print {
+            body { background: white !important; }
+            body * { visibility: hidden; }
+            #resultsSection, #resultsSection * { visibility: visible; }
+            #resultsSection { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none; }
+            .no-print, button, input[type="file"], .drop-zone { display: none !important; }
+            input { border: none !important; background: transparent !important; color: #1e293b !important; padding: 0 !important; }
+            .glass-header { display: none !important; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden" onload="carregarDashboard()">
 
-    <nav class="glass-header border-b border-slate-200 shadow-sm p-3 px-6 flex justify-between items-center shrink-0 z-50">
+    <nav class="glass-header border-b border-slate-200 shadow-sm p-3 px-6 flex justify-between items-center shrink-0 z-50 no-print">
         <div class="flex items-center gap-4 cursor-pointer hover:opacity-80 transition" onclick="mostrarDashboard()">
             <img src="https://i.imgur.com/balrNP2.png" alt="MetalParts Logo" class="h-10 w-auto drop-shadow-sm">
             <div class="h-6 w-px bg-slate-300"></div>
@@ -54,7 +64,7 @@
 
     <div class="w-full flex-1 flex flex-col overflow-hidden bg-slate-100">
         
-        <div id="view-dashboard" class="flex-1 flex flex-col animate-in fade-in duration-500 p-6 overflow-y-auto max-w-[1600px] mx-auto w-full">
+        <div id="view-dashboard" class="flex-1 flex flex-col animate-in fade-in duration-500 p-6 overflow-y-auto max-w-[1600px] mx-auto w-full no-print">
             <div class="flex justify-between items-end mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div>
                     <h2 class="text-3xl font-black text-slate-800 tracking-tight">Extratos Salvos</h2>
@@ -71,13 +81,12 @@
                 Sincronizando com a nuvem...
             </div>
 
-            <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden pb-10">
-                </div>
+            <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden pb-10"></div>
         </div>
 
         <div id="view-editor" class="hidden flex-1 flex flex-col animate-in slide-in-from-bottom-4 duration-500 min-h-0 bg-white">
             
-            <header class="bg-white p-4 px-6 border-b border-slate-200 shrink-0 shadow-sm z-10">
+            <header class="bg-white p-4 px-6 border-b border-slate-200 shrink-0 shadow-sm z-10 no-print">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div class="flex items-center gap-4">
                         <button onclick="mostrarDashboard()" class="text-slate-400 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 border border-slate-200 p-2.5 rounded-lg transition shadow-sm" title="Voltar">
@@ -109,11 +118,22 @@
                 </div>
             </header>
 
-            <section id="importSection" class="p-4 px-6 border-b border-slate-200 shrink-0 bg-slate-50/50">
-                <div id="dropZone" class="drop-zone rounded-xl h-14 flex items-center justify-center group bg-white shadow-sm">
+            <section id="importSection" class="p-4 px-6 border-b border-slate-200 shrink-0 bg-slate-50/50 no-print">
+                <div class="flex gap-6 mb-3 justify-center">
+                    <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm hover:border-blue-400 transition">
+                        <input type="radio" name="formatoImportacao" value="dominio" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <span class="text-xs font-black text-slate-700">Formato Domínio (BENGABI)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm hover:border-blue-400 transition">
+                        <input type="radio" name="formatoImportacao" value="questor" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <span class="text-xs font-black text-slate-700">Formato Questor (MetalParts)</span>
+                    </label>
+                </div>
+
+                <div id="dropZone" class="drop-zone rounded-xl h-16 flex items-center justify-center group bg-white shadow-sm">
                     <p class="text-slate-500 font-bold text-sm group-hover:text-blue-600 transition flex items-center gap-3" id="dropText">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)
+                        Arraste ou clique para importar Folha PDF
                     </p>
                     <input type="file" id="fileInput" class="hidden" accept=".pdf,.xls,.xlsx,.csv" multiple>
                 </div>
@@ -126,16 +146,23 @@
                     </table>
                 </div>
 
-                <div class="px-6 py-3 bg-white flex justify-between items-center border-t border-slate-200 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
+                <div class="px-6 py-3 bg-white flex justify-between items-center border-t border-slate-200 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10 no-print">
                     <span class="text-slate-500 font-bold text-xs bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                         Funcionários Lidos: <span id="totalFuncs" class="text-blue-600 font-black ml-1 text-sm">0</span>
                     </span>
                     <div class="flex gap-3">
                         <button onclick="limparTabela()" class="text-slate-500 hover:text-red-600 font-bold text-[10px] uppercase tracking-wider transition mr-4">Limpar Painel</button>
+                        
+                        <button onclick="window.print()" class="bg-red-600 hover:bg-red-500 text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition text-xs flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            EXPORTAR PDF
+                        </button>
+                        
                         <button onclick="exportarCSV()" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-lg font-bold shadow-md transition text-xs flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l3-3m-3 3l-3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             EXPORTAR EXCEL
                         </button>
+                        
                         <button onclick="salvarNoFirebase()" id="btnSalvar" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-black shadow-md transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2 text-xs border border-emerald-500">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 002-2v-4M17 9l-5 5m0 0l-5-5m5 5V3"></path></svg>
                             SALVAR NA NUVEM
@@ -149,63 +176,40 @@
 
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-        // --------------------------------------------------------------------------------
-        // CONFIGURAÇÃO DO FIREBASE
-        // --------------------------------------------------------------------------------
         const DB_URL = "https://teeste-e33ff-default-rtdb.firebaseio.com/extratos";
 
         // ==========================================
-        // LISTAS DE FILTRO
+        // LISTAS DE FILTRO REFINADAS
+        // (Ordenadas por tamanho para garantir que nomes compostos sejam lidos primeiro)
         // ==========================================
         const DESCONTOS_PERMITIDOS = [
-            "ADIANTAMENTO 13º SALARIO",
-            "ADIANTAMENTO 13O SALARIO",
-            "ADIANTAMENTO 13 SALARIO",
-            "ADIANTAMENTO 13",
-            "HORAS FALTAS PARCIAL", 
-            "DIAS FALTAS DSR", 
-            "DIAS FALTAS"
-        ];
+            "ADIANTAMENTO 13º SALARIO", "ADIANTAMENTO 13O SALARIO", "ADIANTAMENTO 13 SALARIO", "ADIANTAMENTO 13",
+            "DESC.ADIANTAMENTO FÉRIAS", "DESC. ADIANTAMENTO FÉRIAS", "DESC. ADIANT. FÉRIAS", "DESC. ADIANTAMENTO FERIAS",
+            "DEDUÇÃO SIMPLIFICADA - IRRF NORMAL", "DEDUÇÃO SIMPLIFICADA - IRRF FÉRIAS", "DEDUÇÃO SIMPLIFICADA", "DEDUCAO SIMPLIFICADA",
+            "HORAS FALTAS PARCIAL", "DIAS FALTAS DSR", "DIAS FALTAS", "DESCONTO DSR", "HORAS FALTAS DIURNAS", "FALTAS DIURNAS",
+            "EMPRÉSTIMO", "EMPRESTIMO",
+            "INSS FÉRIAS", "INSS FERIAS", "INSS",
+            "IRRF"
+        ].sort((a, b) => b.length - a.length);
 
         const PROVENTOS_PERMITIDOS = [
-            "DIFERENCA DE 1/3 DE FERIAS",
-            "DIFERENCA MEDIA HORA FERIAS", 
-            "DIFERENCA MEDIA VALOR FERIAS", 
-            "REFLEXO HORAS ADIC. NOT DSR",
-            "REFLEXO HORAS ADIC. NOT", 
-            "REFLEXO EXTRAS DSR",
-            "MEDIA VALOR FERIAS", 
-            "MEDIA HORAS FERIAS", 
-            "1/3 DAS FERIAS", 
-            "DIAS FERIAS", 
-            "DIAS NORMAIS", 
-            "HORAS EXTRAS", 
-            "ADICIONAL NOTURNO",
-            "MEDIA HORAS 13º ADIANTADO",
-            "MEDIA VALOR 13º ADIANTADO",
-            "MEDIA HORAS 13O ADIANTADO",
-            "MEDIA VALOR 13O ADIANTADO",
-            "MEDIA HORAS 13 ADIANTADO",
-            "MEDIA VALOR 13 ADIANTADO",
-            "13º SALARIO ADIANTADO", 
-            "13O SALARIO ADIANTADO",
-            "13 SALARIO ADIANTADO", 
-            "MEDIA HORAS 13º",
-            "MEDIA VALOR 13º",
-            "MEDIA HORAS 13O",
-            "MEDIA VALOR 13O",
-            "MEDIA HORAS 13", 
-            "MEDIA VALOR 13",
-            "13º SALARIO", 
-            "13O SALARIO",
-            "13 SALARIO"
-        ];
+            "HORAS NORMAIS DIURNAS", "REPOUSO REMUNERADO", "ADICIONAL TEMPO SERVICO", "ADICIONAL TEMPO SERVIÇO", "ANUÊNIO", "ANUENIO",
+            "DIFERENCA DE 1/3 DE FERIAS", "DIFERENCA MEDIA HORA FERIAS", "DIFERENCA MEDIA VALOR FERIAS", 
+            "REFLEXO HORAS ADIC. NOT DSR", "REFLEXO HORAS ADIC. NOT", "REFLEXO EXTRAS DSR",
+            "MEDIA VALOR FERIAS", "MEDIA HORAS FERIAS", "1/3 DAS FÉRIAS", "1/3 DAS FERIAS", "1/3 SOBRE FÉRIAS", "1/3 SOBRE FERIAS",
+            "HORAS FÉRIAS", "HORAS FERIAS", "DIAS FERIAS", "DIAS FÉRIAS",
+            "SALÁRIO MENSAL", "SALARIO MENSAL", "DIAS NORMAIS", "HORAS EXTRAS", "ADICIONAL NOTURNO",
+            "MEDIA HORAS 13º ADIANTADO", "MEDIA VALOR 13º ADIANTADO", "MEDIA HORAS 13O ADIANTADO", "MEDIA VALOR 13O ADIANTADO",
+            "MEDIA HORAS 13 ADIANTADO", "MEDIA VALOR 13 ADIANTADO", "13º SALARIO ADIANTADO", "13O SALARIO ADIANTADO", "13 SALARIO ADIANTADO", 
+            "MEDIA HORAS 13º", "MEDIA VALOR 13º", "MEDIA HORAS 13O", "MEDIA VALOR 13O", "MEDIA HORAS 13", "MEDIA VALOR 13",
+            "13º SALARIO INTEGRAL", "13O SALARIO INTEGRAL", "13 SALARIO INTEGRAL", "13º SALARIO", "13O SALARIO", "13 SALARIO",
+            "FGTS FÉRIAS", "FGTS FERIAS", "FGTS"
+        ].sort((a, b) => b.length - a.length);
 
         let extratoDB = [];
         let configsGlobais = {}; 
 
-        // --- CONTROLES DE TELAS ---
+        // --- TELAS ---
         function mostrarDashboard() {
             document.getElementById('view-editor').classList.add('hidden');
             document.getElementById('view-dashboard').classList.remove('hidden');
@@ -226,28 +230,21 @@
             document.getElementById('loadingDash').classList.remove('hidden');
             document.getElementById('cardsGrid').classList.add('hidden');
             document.getElementById('cardsGrid').innerHTML = '';
-
             try {
                 const response = await fetch(DB_URL + ".json");
                 if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-                
                 const text = await response.text();
-                if (text.trim().startsWith('<')) throw new Error("O Firebase retornou uma página HTML. Banco de dados não instanciado.");
-
+                if (text.trim().startsWith('<')) throw new Error("Firebase retornou HTML.");
                 const dados = text ? JSON.parse(text) : {};
-                
                 document.getElementById('loadingDash').classList.add('hidden');
                 document.getElementById('cardsGrid').classList.remove('hidden');
-
                 if (dados && Object.keys(dados).length > 0) {
                     Object.keys(dados).forEach(key => {
                         let mesData = dados[key];
                         let qtsFuncs = Object.keys(mesData.configsGlobais || {}).length;
-                        
                         let card = document.createElement('div');
                         card.className = "bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-lg transition cursor-pointer group relative overflow-hidden";
                         card.onclick = () => abrirExtrato(key, mesData);
-                        
                         card.innerHTML = `
                             <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:w-2 transition-all"></div>
                             <div class="flex justify-between items-start mb-4 pl-2">
@@ -265,97 +262,51 @@
                         document.getElementById('cardsGrid').appendChild(card);
                     });
                 } else {
-                    document.getElementById('cardsGrid').innerHTML = `
-                        <div class="col-span-full text-center py-12 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-white">
-                            Nenhum extrato salvo no banco. Clique em "Novo Extrato" para começar.
-                        </div>`;
+                    document.getElementById('cardsGrid').innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-white">Nenhum extrato salvo no banco. Clique em "Novo Extrato" para começar.</div>`;
                 }
             } catch (error) {
-                console.error(error);
-                document.getElementById('loadingDash').innerHTML = `<div class='text-red-500 bg-red-50 p-6 rounded-xl border border-red-200 inline-block'>
-                    <p class="font-black text-lg mb-2">Erro de Conexão com o Firebase</p>
-                    <p class="font-medium text-sm">${error.message}</p>
-                </div>`;
+                document.getElementById('loadingDash').innerHTML = `<div class='text-red-500 bg-red-50 p-6 rounded-xl border border-red-200 inline-block'><p class="font-black text-lg mb-2">Erro de Conexão com o Firebase</p><p class="font-medium text-sm">${error.message}</p></div>`;
             }
         }
 
         function abrirExtrato(key, data) {
             extratoDB = data.extratoDB || [];
             configsGlobais = data.configsGlobais || {};
-            
             document.getElementById('mesReferencia').value = data.mesRef || key;
             document.getElementById('cfgDivHoras').value = data.cfgDivHoras || 220;
             document.getElementById('cfgPercNoturno').value = data.cfgPercNoturno || 20;
-            
             document.getElementById('importSection').classList.add('hidden'); 
             document.getElementById('view-dashboard').classList.add('hidden');
             document.getElementById('view-editor').classList.remove('hidden');
             document.getElementById('navStatus').classList.remove('hidden');
-            
             renderizarGrid();
         }
 
         async function salvarNoFirebase() {
             const mesRef = document.getElementById('mesReferencia').value.trim();
-            if (!mesRef) {
-                alert("Por favor, informe o Título (Ex: 01/2026) no topo da tela antes de salvar.");
-                document.getElementById('mesReferencia').focus();
-                return;
-            }
-
+            if (!mesRef) { alert("Informe o Título (Ex: 01/2026)."); document.getElementById('mesReferencia').focus(); return; }
             const safeKey = mesRef.replace(/[^a-zA-Z0-9-]/g, '-');
             const btn = document.getElementById('btnSalvar');
             const btnOriginalText = btn.innerHTML;
-            
             btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SALVANDO...`;
             btn.disabled = true;
-
-            const payload = {
-                mesRef: mesRef,
-                cfgDivHoras: document.getElementById('cfgDivHoras').value,
-                cfgPercNoturno: document.getElementById('cfgPercNoturno').value,
-                extratoDB: extratoDB,
-                configsGlobais: configsGlobais,
-                dataAtualizacao: new Date().toISOString()
-            };
-
+            const payload = { mesRef: mesRef, cfgDivHoras: document.getElementById('cfgDivHoras').value, cfgPercNoturno: document.getElementById('cfgPercNoturno').value, extratoDB: extratoDB, configsGlobais: configsGlobais, dataAtualizacao: new Date().toISOString() };
             try {
-                const response = await fetch(`${DB_URL}/${safeKey}.json`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
+                const response = await fetch(`${DB_URL}/${safeKey}.json`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if(response.ok) {
                     btn.innerHTML = "✔️ SALVO COM SUCESSO";
-                    btn.classList.replace('bg-emerald-600', 'bg-blue-600');
-                    btn.classList.replace('border-emerald-500', 'border-blue-500');
-                    setTimeout(() => {
-                        btn.innerHTML = btnOriginalText;
-                        btn.disabled = false;
-                        btn.classList.replace('bg-blue-600', 'bg-emerald-600');
-                        btn.classList.replace('border-blue-500', 'border-emerald-500');
-                    }, 3000);
-                } else {
-                    throw new Error("Falha na gravação.");
-                }
+                    btn.classList.replace('bg-emerald-600', 'bg-blue-600'); btn.classList.replace('border-emerald-500', 'border-blue-500');
+                    setTimeout(() => { btn.innerHTML = btnOriginalText; btn.disabled = false; btn.classList.replace('bg-blue-600', 'bg-emerald-600'); btn.classList.replace('border-blue-500', 'border-emerald-500'); }, 3000);
+                } else throw new Error("Falha na gravação.");
             } catch (error) {
-                console.error(error);
-                alert("Erro ao salvar no Firebase.");
-                btn.innerHTML = btnOriginalText;
-                btn.disabled = false;
+                alert("Erro ao salvar no Firebase."); btn.innerHTML = btnOriginalText; btn.disabled = false;
             }
         }
 
-
-        // =========================================================================
-        // MOTOR DE EXTRAÇÃO E CÁLCULO
-        // =========================================================================
-
+        // --- EXTRATOR E LÓGICA ---
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const dropText = document.getElementById('dropText');
-
         dropZone.onclick = () => fileInput.click();
         dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); };
         dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
@@ -363,32 +314,31 @@
         fileInput.onchange = (e) => processarArquivos(e.target.files);
 
         async function processarArquivos(files) {
-            dropText.innerHTML = `<svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Lendo arquivo... Aguarde.`;
+            dropText.innerHTML = `<svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Lendo arquivo...`;
+            const formato = document.querySelector('input[name="formatoImportacao"]:checked').value;
+            
             try {
                 for (let file of files) {
                     const ext = file.name.split('.').pop().toLowerCase();
                     const arrayBuffer = await file.arrayBuffer();
-
-                    if (ext === 'pdf') {
-                        await extrairDoPDF(arrayBuffer);
-                    } else {
+                    if (ext === 'pdf') await extrairDoPDF(arrayBuffer, formato);
+                    else {
                         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
-                        extrairMatriz(rows);
+                        if(formato === 'dominio') extrairMatrizDominio(rows); else extrairMatrizQuestor(rows);
                     }
                 }
                 renderizarGrid();
             } catch (err) {
-                console.error(err);
-                alert("Erro ao processar o arquivo. Verifique o console.");
+                console.error(err); alert("Erro ao processar arquivo.");
             }
-            dropText.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Arraste ou clique para importar Folha Questor (PDF, XLS ou CSV)`;
+            dropText.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Arraste ou clique para importar Folha PDF`;
         }
 
         function parseMoney(val) {
             if (!val) return null;
             let str = val.toString().trim();
-            if (str.includes(':') || str.includes('/') || /[a-zA-Z]{3,}/.test(str)) return null; 
+            if (str.includes(':') || str.includes('/') || /[a-zA-Z]{4,}/.test(str)) return null; 
             let cleaned = str.replace(/[PDR$\s]/gi, '').trim();
             if (cleaned.includes(',') && cleaned.includes('.')) cleaned = cleaned.replace(/\./g, '').replace(',', '.');
             else if (cleaned.includes(',')) cleaned = cleaned.replace(',', '.');
@@ -405,42 +355,28 @@
             return num !== null ? num : 0;
         }
 
-        function validarFiltroEstrito(descRaw) {
-            const d = descRaw.toUpperCase().trim();
-            
-            // BLOQUEIO EXPLÍCITO (Blacklist para evitar cruzamentos)
-            if (d.includes("INSS") || d.includes("IRRF") || d.includes("FGTS") || d.includes("BASE") || d.includes("LÍQUIDO") || d.includes("LIQUIDO")) {
-                return { status: 'IGNORAR' };
-            }
-            
-            let desc = DESCONTOS_PERMITIDOS.find(v => d.includes(v));
-            if (desc) return { status: 'OK', tipo: 'DESCONTO', nomeMatch: desc };
-            
-            let prov = PROVENTOS_PERMITIDOS.find(v => d.includes(v));
-            if (prov) return { status: 'OK', tipo: 'PROVENTO', nomeMatch: prov };
-            
-            return { status: 'IGNORAR' };
-        }
-
         function definirCategoriaLogica(nomeMatch) {
             const n = nomeMatch;
-            if (n.includes("DIAS NORMAIS")) return 'BASE';
+            if (n.includes("DIAS NORMAIS") || n.includes("HORAS NORMAIS DIURNAS") || n.includes("SALÁRIO MENSAL") || n.includes("SALARIO MENSAL")) return 'BASE';
             if (n.includes("HORAS EXTRAS")) return 'HE';
             if (n.includes("ADICIONAL NOTURNO")) return 'ADIC_NOT';
-            if (n.includes("DIAS FERIAS")) return 'FERIAS_DIAS';
-            if (n.includes("1/3 DAS FERIAS")) return 'FERIAS_TERCO';
+            if (n.includes("DIAS FERIAS") || n.includes("DIAS FÉRIAS") || n.includes("HORAS FÉRIAS") || n.includes("HORAS FERIAS")) return 'FERIAS_DIAS';
+            if (n.includes("1/3 SOBRE") || n.includes("1/3 DAS")) return 'FERIAS_TERCO';
             
-            if (n.includes("MEDIA") || n.includes("MÉDIA") || n.includes("DIFERENCA DE 1/3") || n.includes("DIFERENÇA DE 1/3") || n.includes("13 SALARIO") || n.includes("13º SALARIO") || n.includes("13O SALARIO") || n.includes("ADIANTAMENTO 13")) return 'MEDIA_PROP';
+            if (n.includes("MEDIA") || n.includes("MÉDIA") || n.includes("DIFERENCA DE 1/3") || n.includes("DIFERENÇA DE 1/3") || n.includes("13 SALARIO") || n.includes("13º SALARIO") || n.includes("13O SALARIO") || n.includes("ADIANTAMENTO 13") || n.includes("TEMPO SERVIÇO") || n.includes("TEMPO SERVICO") || n.includes("ANUÊNIO") || n.includes("ANUENIO")) return 'MEDIA_PROP';
             
-            if (n.includes("REFLEXO EXTRAS DSR") || n.includes("REFLEXO HORAS ADIC. NOT")) return 'DSR_PROV';
+            // Impostos e Descontos Fixos que ajustam proporcionalmente:
+            if (n.includes("FGTS") || n.includes("INSS") || n.includes("IRRF") || n.includes("DEDUÇÃO") || n.includes("DEDUCAO") || n.includes("EMPRÉSTIMO") || n.includes("EMPRESTIMO") || n.includes("DESC.ADIANTAMENTO") || n.includes("DESC. ADIANTAMENTO")) return 'MEDIA_PROP';
             
-            if (n.includes("DIAS FALTAS") && !n.includes("DSR")) return 'FALTA_DIA';
-            if (n.includes("HORAS FALTAS PARCIAL")) return 'FALTA_HORA';
-            if (n.includes("DIAS FALTAS DSR")) return 'DSR_DESC';
+            if (n.includes("REFLEXO EXTRAS DSR") || n.includes("REFLEXO HORAS ADIC. NOT") || n.includes("REPOUSO REMUNERADO")) return 'DSR_PROV';
+            
+            if ((n.includes("DIAS FALTAS") || n.includes("FALTAS DIURNAS")) && !n.includes("DSR")) return 'FALTA_DIA';
+            if (n.includes("HORAS FALTAS PARCIAL") || n.includes("HORAS FALTAS DIURNAS")) return 'FALTA_HORA';
+            if (n.includes("DIAS FALTAS DSR") || n.includes("DESCONTO DSR")) return 'DSR_DESC';
             return 'DESCONHECIDO';
         }
 
-        async function extrairDoPDF(arrayBuffer) {
+        async function extrairDoPDF(arrayBuffer, formato) {
             const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
             let lines = [];
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -450,9 +386,10 @@
 
                 let yMap = {};
                 items.forEach(item => {
-                    let y = Math.round(item.transform[5]);
-                    if (!yMap[y]) yMap[y] = [];
-                    yMap[y].push(item);
+                    let y = item.transform[5];
+                    let matchedY = Object.keys(yMap).find(k => Math.abs(parseFloat(k) - y) <= 4);
+                    if (matchedY) yMap[matchedY].push(item);
+                    else yMap[y] = [item];
                 });
 
                 let yKeys = Object.keys(yMap).sort((a, b) => b - a); 
@@ -462,27 +399,33 @@
                     if (rowStr.length > 0) lines.push(rowStr);
                 });
             }
-            extrairMatriz(lines);
+            if(formato === 'dominio') extrairMatrizDominio(lines);
+            else extrairMatrizQuestor(lines);
         }
 
-        function extrairMatriz(rows) {
+        // --- CÉREBRO DOMINIO (SCANNER INTELIGENTE) ---
+        function extrairMatrizDominio(rows) {
             let nomeAtual = "";
+            let todasVerbas = [...PROVENTOS_PERMITIDOS, ...DESCONTOS_PERMITIDOS];
+
             for (let i = 0; i < rows.length; i++) {
                 let r = rows[i];
-                if (!r || !Array.isArray(r)) {
-                    if (typeof r === 'object') r = Object.values(r);
-                    else continue;
-                }
-
-                let rUpper = r.map(c => c ? c.toString().toUpperCase().trim() : "");
+                if (!r) continue;
+                let rUpper = Array.isArray(r) ? r.map(c => c ? c.toString().toUpperCase().trim() : "") : Object.values(r).map(c => c ? c.toString().toUpperCase().trim() : "");
                 let rowJoined = rUpper.join(" ");
 
-                if (rowJoined.includes("EMPR.:") || rUpper[0] === "EMPR.:") {
-                    let fullStr = rowJoined.split("EMPR.:")[1] || rowJoined;
-                    nomeAtual = fullStr.split("SITUAÇÃO:")[0].trim();
-                    nomeAtual = nomeAtual.replace(/^\d+\s+/, '').trim();
+                // ACHA O NOME
+                if (rowJoined.includes("FUNC:") || rowJoined.includes("FUNC :") || rowJoined.includes("EMPR.:") || rowJoined.includes("FUNCIONÁRIO:") || rowJoined.includes("EMPREGADO:")) {
+                    let marker = "FUNC:";
+                    if (rowJoined.includes("FUNC :")) marker = "FUNC :";
+                    if (rowJoined.includes("EMPR.:")) marker = "EMPR.:";
+                    if (rowJoined.includes("FUNCIONÁRIO:")) marker = "FUNCIONÁRIO:";
+                    if (rowJoined.includes("EMPREGADO:")) marker = "EMPREGADO:";
                     
-                    if (!configsGlobais[nomeAtual]) {
+                    let fullStr = rowJoined.split(marker)[1] || rowJoined;
+                    nomeAtual = fullStr.split("CARGO:")[0].split("SITUAÇÃO:")[0].split("CBO:")[0].split("CPF:")[0].split("ADMISSÃO:")[0].split("ADM")[0].trim();
+                    nomeAtual = nomeAtual.replace(/^\d+[-.\s]*/, '').trim(); 
+                    if (!configsGlobais[nomeAtual] && nomeAtual.length > 0) {
                         configsGlobais[nomeAtual] = { sAnt: 0, sNov: 0, diasMes: 30, qtdDsr: 5 };
                     }
                     continue;
@@ -490,95 +433,231 @@
 
                 if (!nomeAtual || rowJoined.includes("LÍQUIDO:")) continue;
 
-                if (rowJoined.includes("SALÁRIO:")) {
-                    let idxSal = rUpper.findIndex(c => c.includes("SALÁRIO:"));
-                    let sValStr = "";
-                    if (rUpper[idxSal] === "SALÁRIO:") sValStr = r[idxSal + 1];
-                    else sValStr = rUpper[idxSal].split("SALÁRIO:")[1];
-
+                // ACHA O SALÁRIO
+                if (rowJoined.includes("SALÁRIO:") || rowJoined.includes("SALARIO:") || rowJoined.includes("SALÁRIO BASE:")) {
+                    let marker = rowJoined.includes("SALÁRIO BASE:") ? "SALÁRIO BASE:" : (rowJoined.includes("SALÁRIO:") ? "SALÁRIO:" : "SALARIO:");
+                    let parts = rowJoined.split(marker);
+                    let sValStr = parts.length > 1 ? parts[1].trim().split(/\s+/)[0] : "";
+                    
                     let sNum = parseMoney(sValStr);
-                    if (sNum !== null) {
+                    
+                    if (sNum === null || sNum === 0) {
+                        if (i + 1 < rows.length) {
+                            let nextRow = Array.isArray(rows[i+1]) ? rows[i+1] : Object.values(rows[i+1]);
+                            let nextRowStr = nextRow.map(x => x ? x.toString().toUpperCase().trim() : "").join(" ");
+                            let matchSal = nextRowStr.trim().match(/^[\d.,]+/);
+                            if (matchSal) sNum = parseMoney(matchSal[0]);
+                        }
+                    }
+
+                    if (sNum !== null && sNum > 0) {
                         configsGlobais[nomeAtual].sAnt = sNum;
                         if (configsGlobais[nomeAtual].sNov === 0) configsGlobais[nomeAtual].sNov = sNum;
                     }
                     continue;
                 }
 
-                for (let c = 0; c < rUpper.length; c++) {
-                    let cellStr = rUpper[c];
-                    let analise = validarFiltroEstrito(cellStr);
+                // ACHA AS VERBAS (Olhando a linha atual + as duas de baixo)
+                let textToSearch = rowJoined;
+                for(let nextR = 1; nextR <= 2; nextR++) {
+                    if (i + nextR < rows.length) {
+                        let nextRow = rows[i+nextR];
+                        let nextRowArr = Array.isArray(nextRow) ? nextRow : Object.values(nextRow);
+                        textToSearch += " " + nextRowArr.map(x => x ? x.toString().toUpperCase().trim() : "").join(" ");
+                    }
+                }
+
+                for (let vName of todasVerbas) {
+                    if (textToSearch.includes(vName)) {
+                        let safeVName = vName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+                        let regex = new RegExp(safeVName + "\\s+(?:([\\d.,:]+)\\s*(?:HS|%)?\\s+)?([\\d.,]+)", "i");
+                        let match = textToSearch.match(regex);
+                        
+                        if (match) {
+                            let qtdStr = match[1] || "0";
+                            let valStr = match[2];
+                            
+                            let vAnt = parseMoney(valStr) || 0;
+                            let qtdDec = parseTimeAndDecimal(qtdStr);
+                            
+                            if (vAnt !== 0) {
+                                let isDesc = DESCONTOS_PERMITIDOS.includes(vName);
+                                let cat = definirCategoriaLogica(vName);
+                                
+                                if (cat === 'ADIC_NOT') qtdDec = qtdDec * 1.142857; 
+                                if (cat === 'BASE' && qtdDec >= 20 && qtdDec <= 31) configsGlobais[nomeAtual].diasMes = Math.round(qtdDec);
+
+                                let alreadyExists = extratoDB.some(x => x.nome === nomeAtual && x.descExata === vName && x.vAnt === (isDesc ? -vAnt : vAnt));
+                                if (!alreadyExists) {
+                                    extratoDB.push({
+                                        id: Math.random().toString(36).substr(2, 9),
+                                        nome: nomeAtual,
+                                        descExata: vName,
+                                        cat: cat,
+                                        isDesc: isDesc,
+                                        qtdLida: qtdStr !== "0" ? qtdStr : "",
+                                        qtdCalc: qtdDec,
+                                        divisorLinha: null,
+                                        vAnt: isDesc ? -vAnt : vAnt, 
+                                        vNov: 0, 
+                                        diff: 0
+                                    });
+                                }
+                                
+                                textToSearch = textToSearch.replace(match[0], ""); // Previne duplicidade
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- QUESTOR (Formato Leitura P/D Original) ---
+        function extrairMatrizQuestor(rows) {
+            let nomeAtual = "";
+            let todasVerbas = [...PROVENTOS_PERMITIDOS, ...DESCONTOS_PERMITIDOS];
+
+            for (let i = 0; i < rows.length; i++) {
+                let r = rows[i];
+                if (!r || !Array.isArray(r)) {
+                    if (typeof r === 'object') r = Object.values(r);
+                    else continue;
+                }
+                let rUpper = r.map(c => c ? c.toString().toUpperCase().trim() : "");
+                let rowJoined = rUpper.join(" ");
+
+                if (rowJoined.includes("EMPR.:") || rowJoined.includes("FUNCIONÁRIO:") || rowJoined.includes("EMPREGADO:")) {
+                    let marker = rowJoined.includes("EMPR.:") ? "EMPR.:" : (rowJoined.includes("EMPREGADO:") ? "EMPREGADO:" : "FUNCIONÁRIO:");
+                    let fullStr = rowJoined.split(marker)[1] || rowJoined;
+                    nomeAtual = fullStr.split("SITUAÇÃO:")[0].split("FUNÇÃO:")[0].split("CARGO:")[0].split("CPF:")[0].split("CBO:")[0].trim();
+                    nomeAtual = nomeAtual.replace(/^\d+[-.\s]*/, '').trim(); 
+                    if (!configsGlobais[nomeAtual] && nomeAtual.length > 0) configsGlobais[nomeAtual] = { sAnt: 0, sNov: 0, diasMes: 30, qtdDsr: 5 };
+                    continue;
+                }
+
+                if (!nomeAtual || rowJoined.includes("LÍQUIDO:")) continue;
+
+                if (rowJoined.includes("SALÁRIO:") || rowJoined.includes("SALARIO:") || rowJoined.includes("SALÁRIO BASE:")) {
+                    let marker = rowJoined.includes("SALÁRIO BASE:") ? "SALÁRIO BASE:" : (rowJoined.includes("SALÁRIO:") ? "SALÁRIO:" : "SALARIO:");
+                    let parts = rowJoined.split(marker);
+                    let sValStr = parts.length > 1 ? parts[1].trim().split(/\s+/)[0] : "";
                     
-                    if (analise.status === 'OK') {
-                        let isDesc = (analise.tipo === 'DESCONTO');
-                        let vAnt = 0;
-                        let qtdRaw = "0";
-                        let numBuffer = [];
+                    let sNum = parseMoney(sValStr);
+                    if (sNum === null || sNum === 0) {
+                        if (i + 1 < rows.length) {
+                            let nextRow = Array.isArray(rows[i+1]) ? rows[i+1] : Object.values(rows[i+1]);
+                            let nextRowStr = nextRow.map(x => x ? x.toString().toUpperCase().trim() : "").join(" ");
+                            sNum = parseMoney(nextRowStr.trim().split(/\s+/)[0]);
+                        }
+                    }
+
+                    if (sNum !== null && sNum > 0) {
+                        configsGlobais[nomeAtual].sAnt = sNum;
+                        if (configsGlobais[nomeAtual].sNov === 0) configsGlobais[nomeAtual].sNov = sNum;
+                    }
+                    continue;
+                }
+
+                let textToSearch = rowJoined;
+                for(let nextR = 1; nextR <= 2; nextR++) {
+                    if (i + nextR < rows.length) {
+                        let nextRow = rows[i+nextR];
+                        let nextRowArr = Array.isArray(nextRow) ? nextRow : Object.values(nextRow);
+                        textToSearch += " " + nextRowArr.map(x => x ? x.toString().toUpperCase().trim() : "").join(" ");
+                    }
+                }
+
+                for (let vName of todasVerbas) {
+                    if (textToSearch.includes(vName)) {
+                        let isDesc = DESCONTOS_PERMITIDOS.includes(vName);
+                        
+                        let idx = textToSearch.indexOf(vName);
+                        let afterText = textToSearch.substring(idx + vName.length).trim();
+                        let tokens = afterText.split(/\s+/);
+                        
+                        let numsBuffer = [];
                         let achouPD = false;
 
-                        for (let k = c + 1; k < rUpper.length; k++) {
-                            let nextCell = rUpper[k];
-                            if (nextCell === "") continue;
-
-                            if (nextCell === 'P' || nextCell === 'D' || nextCell.endsWith(' P') || nextCell.endsWith(' D')) {
+                        for (let token of tokens) {
+                            if (token === 'P' || token === 'D') {
                                 achouPD = true;
-                                if (nextCell.length > 1 && parseMoney(nextCell) !== null) {
-                                    vAnt = parseMoney(nextCell);
-                                } else if (numBuffer.length > 0) {
-                                    vAnt = numBuffer[numBuffer.length - 1].val;
-                                }
-
-                                if (nextCell.length > 1 && numBuffer.length > 0) {
-                                    qtdRaw = numBuffer[numBuffer.length - 1].raw;
-                                } else if (numBuffer.length > 1) {
-                                    qtdRaw = numBuffer[numBuffer.length - 2].raw;
-                                }
-                                c = k; 
+                                if (token === 'D') isDesc = true;
+                                if (token === 'P') isDesc = false;
                                 break;
                             }
-
-                            let parsedNum = parseMoney(nextCell);
-                            if (parsedNum !== null || nextCell.includes(':')) {
-                                numBuffer.push({ raw: nextCell, val: parsedNum !== null ? parsedNum : nextCell });
-                            } else if (/[A-Z]{3,}/.test(nextCell)) {
-                                if (numBuffer.length > 0) vAnt = numBuffer[numBuffer.length - 1].val;
-                                if (numBuffer.length > 1) qtdRaw = numBuffer[numBuffer.length - 2].raw;
-                                c = k - 1; 
+                            if (token.endsWith('P') || token.endsWith('D')) {
+                                let cleanToken = token.slice(0, -1);
+                                if (token.endsWith('D')) isDesc = true;
+                                if (token.endsWith('P')) isDesc = false;
+                                achouPD = true;
+                                let pNum = parseMoney(cleanToken);
+                                if (pNum !== null || cleanToken.includes(':')) numsBuffer.push({ raw: cleanToken, val: pNum !== null ? pNum : cleanToken });
                                 break;
                             }
+                            if (/[A-Z]{3,}/.test(token)) break; 
+
+                            let pNum = parseMoney(token);
+                            if (pNum !== null || token.includes(':')) numsBuffer.push({ raw: token, val: pNum !== null ? pNum : token });
                         }
 
-                        if (!achouPD && numBuffer.length > 0 && vAnt === 0) {
-                            vAnt = numBuffer[numBuffer.length - 1].val;
-                            if (numBuffer.length > 1) qtdRaw = numBuffer[numBuffer.length - 2].raw;
-                        }
-
-                        if (vAnt !== 0 || qtdRaw !== "0") {
-                            vAnt = Math.abs(vAnt);
-                            if (isDesc) vAnt = -vAnt;
-
-                            let qtdDec = parseTimeAndDecimal(qtdRaw);
-                            let qtdCalculo = qtdDec;
-                            let categoriaMatematica = definirCategoriaLogica(analise.nomeMatch);
+                        if (!achouPD && numsBuffer.length > 0) {
+                            let vAnt = numsBuffer[numsBuffer.length - 1].val;
+                            let qtdRaw = numsBuffer.length > 1 ? numsBuffer[numsBuffer.length - 2].raw : "0";
                             
-                            if (categoriaMatematica === 'ADIC_NOT') qtdCalculo = qtdDec * 1.142857; 
+                            if (vAnt !== 0 || qtdRaw !== "0") {
+                                vAnt = Math.abs(vAnt); if (isDesc) vAnt = -vAnt;
+                                let qtdDec = parseTimeAndDecimal(qtdRaw);
+                                let qtdCalculo = qtdDec;
+                                let categoriaMatematica = definirCategoriaLogica(vName);
+                                
+                                if (categoriaMatematica === 'ADIC_NOT') qtdCalculo = qtdDec * 1.142857; 
+                                if (categoriaMatematica === 'BASE' && qtdCalculo >= 20 && qtdCalculo <= 31) configsGlobais[nomeAtual].diasMes = Math.round(qtdCalculo);
 
-                            if (categoriaMatematica === 'BASE' && qtdCalculo >= 20 && qtdCalculo <= 31) {
-                                configsGlobais[nomeAtual].diasMes = Math.round(qtdCalculo);
+                                let alreadyExists = extratoDB.some(x => x.nome === nomeAtual && x.descExata === vName && x.vAnt === vAnt);
+                                if(!alreadyExists) {
+                                    extratoDB.push({
+                                        id: Math.random().toString(36).substr(2, 9),
+                                        nome: nomeAtual,
+                                        descExata: vName,
+                                        cat: categoriaMatematica,
+                                        isDesc: isDesc,
+                                        qtdLida: qtdRaw !== "0" ? qtdRaw : "",
+                                        qtdCalc: qtdCalculo,
+                                        divisorLinha: null,
+                                        vAnt: vAnt, vNov: 0, diff: 0
+                                    });
+                                }
+                                textToSearch = textToSearch.replace(vName, ""); 
                             }
+                        } else if (achouPD && numsBuffer.length > 0) {
+                            let vAnt = numsBuffer[numsBuffer.length - 1].val;
+                            let qtdRaw = numsBuffer.length > 1 ? numsBuffer[numsBuffer.length - 2].raw : "0";
 
-                            extratoDB.push({
-                                id: Math.random().toString(36).substr(2, 9),
-                                nome: nomeAtual,
-                                descExata: cellStr.substring(0, 45).trim(),
-                                cat: categoriaMatematica,
-                                isDesc: isDesc,
-                                qtdLida: qtdRaw,
-                                qtdCalc: qtdCalculo,
-                                divisorLinha: null,
-                                vAnt: vAnt,
-                                vNov: 0,
-                                diff: 0
-                            });
+                            if (vAnt !== 0 || qtdRaw !== "0") {
+                                vAnt = Math.abs(vAnt); if (isDesc) vAnt = -vAnt;
+                                let qtdDec = parseTimeAndDecimal(qtdRaw);
+                                let qtdCalculo = qtdDec;
+                                let categoriaMatematica = definirCategoriaLogica(vName);
+                                
+                                if (categoriaMatematica === 'ADIC_NOT') qtdCalculo = qtdDec * 1.142857; 
+                                if (categoriaMatematica === 'BASE' && qtdCalculo >= 20 && qtdCalculo <= 31) configsGlobais[nomeAtual].diasMes = Math.round(qtdCalculo);
+
+                                let alreadyExists = extratoDB.some(x => x.nome === nomeAtual && x.descExata === vName && x.vAnt === vAnt);
+                                if(!alreadyExists) {
+                                    extratoDB.push({
+                                        id: Math.random().toString(36).substr(2, 9),
+                                        nome: nomeAtual,
+                                        descExata: vName,
+                                        cat: categoriaMatematica,
+                                        isDesc: isDesc,
+                                        qtdLida: qtdRaw !== "0" ? qtdRaw : "",
+                                        qtdCalc: qtdCalculo,
+                                        divisorLinha: null,
+                                        vAnt: vAnt, vNov: 0, diff: 0
+                                    });
+                                }
+                                textToSearch = textToSearch.replace(vName, ""); 
+                            }
                         }
                     }
                 }
@@ -586,6 +665,8 @@
         }
 
         // --- RENDERIZAÇÃO ---
+        function formatBR(num) { return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
         function renderizarGrid() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -652,7 +733,7 @@
                         <span class="text-[10px] text-slate-500 uppercase block mb-0.5 font-bold">Líquido</span>
                         <span class="font-black text-emerald-600 text-lg tracking-tight" id="total_${fId}">R$ 0,00</span>
                     </td>
-                    <td class="p-2 text-center w-[5%] align-middle bg-slate-50 pr-4">
+                    <td class="p-2 text-center w-[5%] align-middle bg-slate-50 pr-4 no-print">
                         <button onclick="removerFuncionario('${nome}')" title="Excluir Funcionário" class="bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 p-2 rounded-lg transition shadow-sm border border-slate-200 hover:border-red-200">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
@@ -676,7 +757,7 @@
                                     <th class="w-[8%] text-right bg-slate-100 text-slate-600 border-b border-slate-300 shadow-inner">Valor Antigo</th>
                                     <th class="w-[8%] text-right bg-slate-100 text-emerald-700 border-b border-slate-300 shadow-inner">Novo Calculado</th>
                                     <th class="w-[8%] text-right bg-slate-100 text-emerald-800 border-b border-slate-300 shadow-inner">Diferença</th>
-                                    <th class="w-[5%] text-center bg-slate-100 text-slate-600 border-b border-slate-300 shadow-inner">Excluir</th>
+                                    <th class="w-[5%] text-center bg-slate-100 text-slate-600 border-b border-slate-300 shadow-inner no-print">Excluir</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -692,12 +773,9 @@
                         if (v.cat === 'DSR_PROV') v.divisorLinha = Math.max(1, cfg.diasMes - cfg.qtdDsr);
                         else v.divisorLinha = isHora ? (document.getElementById('cfgDivHoras').value || 220) : cfg.diasMes;
                     }
-                    if (v.cat === 'DSR_PROV' && v.qtdCalc === 0) {
-                        v.qtdCalc = cfg.qtdDsr;
-                    }
+                    if (v.cat === 'DSR_PROV' && v.qtdCalc === 0) v.qtdCalc = cfg.qtdDsr;
                     
-                    let divHtml = '';
-                    let calcQtdHTML = '';
+                    let divHtml = ''; let calcQtdHTML = '';
                     
                     if (v.cat === 'FERIAS_TERCO') {
                         divHtml = `<input type="text" value="Soma / 3" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled>`;
@@ -706,8 +784,8 @@
                         divHtml = `<input type="text" value="Prop. %" class="input-box text-center bg-transparent border-none text-slate-400 text-[10px]" disabled title="Ajuste Proporcional ao Dissídio">`;
                         calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-transparent border-none text-slate-400 font-bold" disabled>`;
                     } else {
-                        divHtml = `<input type="number" step="0.01" value="${v.divisorLinha}" class="input-box text-center bg-amber-50/50 text-amber-700 border border-amber-200 font-bold inp-divisor" oninput="atualizarDivisorManual('${v.id}', this.value)">`;
-                        calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-indigo-50 text-indigo-700 font-bold border border-indigo-200" oninput="atualizarQtdManual('${v.id}', this.value)">`;
+                        divHtml = `<input type="number" step="0.01" value="${v.divisorLinha}" class="input-box text-center bg-amber-50/50 text-amber-700 border-amber-200 font-bold inp-divisor" oninput="atualizarDivisorManual('${v.id}', this.value)">`;
+                        calcQtdHTML = `<input type="number" step="0.01" value="${v.qtdCalc.toFixed(4)}" class="input-box text-center bg-indigo-50 text-indigo-700 font-bold border-indigo-200" oninput="atualizarQtdManual('${v.id}', this.value)">`;
                     }
 
                     htmlVerbas += `
@@ -730,7 +808,7 @@
                             <td class="text-right bg-emerald-50/50 align-middle border-l border-emerald-100 pr-6">
                                 <div class="val-diff font-black text-slate-700 text-[12px]">R$ 0,00</div>
                             </td>
-                            <td class="text-center align-middle">
+                            <td class="text-center align-middle no-print">
                                 <button onclick="removerVerba('${v.id}')" title="Excluir Verba" class="text-slate-400 hover:text-red-500 bg-white hover:bg-red-50 p-1.5 rounded-lg border border-slate-200 transition shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
@@ -749,10 +827,10 @@
             recalcularTudo();
         }
 
+        // --- CÁLCULOS ---
         function sincronizarConfig(nome, campo, valor) {
             let num = parseFloat(valor) || 0;
             configsGlobais[nome][campo] = num;
-            
             if (campo === 'diasMes') {
                 document.querySelectorAll(`tr[data-nome="${nome}"]`).forEach(row => {
                     const vId = row.id.split('row_')[1];
@@ -797,7 +875,6 @@
             const perc = parseFloat(document.getElementById('cfgAumento').value);
             if (isNaN(perc) || perc <= 0) return;
             const fator = 1 + (perc / 100);
-            
             Object.keys(configsGlobais).forEach(nome => {
                 configsGlobais[nome].sNov = configsGlobais[nome].sAnt * fator;
             });
@@ -805,8 +882,6 @@
         }
 
         function recalcularTudo() {
-            const divHorasGlob = parseFloat(document.getElementById('cfgDivHoras').value) || 220;
-            
             let somaHE = {}; 
             let somaAdicNot = {}; 
             let somaParaTerco = {}; 
@@ -829,23 +904,19 @@
 
                 if (v.cat === 'BASE' || v.cat === 'FERIAS_DIAS') {
                     v.vNov = (sNov / divLinha) * v.qtdCalc;
-                    if (v.cat === 'FERIAS_DIAS') {
-                        somaParaTerco[v.nome] = (somaParaTerco[v.nome] || 0) + v.vNov;
-                    }
+                    if (v.cat === 'FERIAS_DIAS') somaParaTerco[v.nome] = (somaParaTerco[v.nome] || 0) + v.vNov;
                 } 
                 else if (v.cat === 'HE') {
                     let pExtra = 1.5; 
                     let m = v.descExata.match(/(\d+)%/); 
                     if (m) pExtra = 1 + (parseInt(m[1]) / 100);
                     v.vNov = (sNov / divLinha) * pExtra * v.qtdCalc;
-                    
                     somaHE[v.nome] = (somaHE[v.nome] || 0) + v.vNov;
                 }
                 else if (v.cat === 'ADIC_NOT') {
                     let pNoturno = parseFloat(document.getElementById('cfgPercNoturno').value) || 20; 
                     let m = v.descExata.match(/(\d+)%/); 
                     if (m) pNoturno = parseInt(m[1]);
-                    
                     v.vNov = (sNov / divLinha) * (pNoturno / 100) * v.qtdCalc;
                     somaAdicNot[v.nome] = (somaAdicNot[v.nome] || 0) + v.vNov;
                 }
@@ -861,7 +932,6 @@
                         somaParaTerco[v.nome] = (somaParaTerco[v.nome] || 0) + v.vNov;
                     }
                 }
-
                 if (v.isDesc && v.vNov > 0) v.vNov = -v.vNov; 
             });
 
@@ -882,7 +952,7 @@
                 } else if (v.cat === 'DSR_PROV') {
                     let varSum = 0;
                     if (v.descExata.includes("EXTRAS")) varSum = somaHE[v.nome] || 0;
-                    else if (v.descExata.includes("ADIC. NOT") || v.descExata.includes("ADICIONAL NOTURNO")) varSum = somaAdicNot[v.nome] || 0;
+                    else if (v.descExata.includes("ADIC. NOT") || v.descExata.includes("ADICIONAL NOTURNO") || v.descExata.includes("REPOUSO REMUNERADO")) varSum = somaAdicNot[v.nome] || 0;
                     else varSum = (somaHE[v.nome] || 0) + (somaAdicNot[v.nome] || 0);
 
                     v.vNov = (varSum / divLinha) * v.qtdCalc;
@@ -890,7 +960,6 @@
 
                 if (v.isDesc && v.vNov > 0) v.vNov = -v.vNov;
                 v.diff = v.vNov - v.vAnt;
-
                 totalPorFuncionario[v.nome] = (totalPorFuncionario[v.nome] || 0) + v.diff;
 
                 row.querySelector('.val-nov').innerText = v.vNov.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -907,7 +976,6 @@
                 if (elBadgeItem && elBadgeDiff && elBadgeDesc) {
                     let diffFormat = (v.diff > 0 ? '+' : '') + v.diff.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     if(v.diff === 0) diffFormat = '0,00';
-                    
                     elBadgeDiff.innerText = diffFormat;
                     
                     if (v.diff < -0.01) {
@@ -944,12 +1012,8 @@
             document.getElementById('badge_item_' + id)?.remove();
             let verba = extratoDB.find(v => v.id === id);
             extratoDB = extratoDB.filter(v => v.id !== id);
-            
-            if (verba && !extratoDB.some(v => v.nome === verba.nome)) {
-                removerFuncionario(verba.nome);
-            } else {
-                recalcularTudo();
-            }
+            if (verba && !extratoDB.some(v => v.nome === verba.nome)) removerFuncionario(verba.nome);
+            else recalcularTudo();
         }
 
         function removerFuncionario(nome) {
@@ -960,25 +1024,20 @@
 
         function exportarCSV() {
             let csv = "\ufeffNomeFuncionario;SalarioAntigo;SalarioNovo;DiasMes;QtdDSR;DescricaoVerba;QtdCalculo;DivisorDaFormula;Tipo;ValorAntigo;NovoCalculado;DiferencaAPagar\n";
-            
             extratoDB.forEach(v => {
                 const cfg = configsGlobais[v.nome];
                 const sA = cfg.sAnt.toFixed(2).replace('.', ',');
                 const sN = cfg.sNov.toFixed(2).replace('.', ',');
                 const dMes = cfg.diasMes;
                 const dsr = cfg.qtdDsr;
-                
                 const qtdCalc = v.cat === 'FERIAS_TERCO' || v.cat === 'MEDIA_PROP' ? "0" : v.qtdCalc.toFixed(4).replace('.', ',');
                 const divLinha = v.cat === 'FERIAS_TERCO' || v.cat === 'MEDIA_PROP' ? "0" : (v.divisorLinha ? v.divisorLinha.toString().replace('.', ',') : '');
-                
                 const tipo = v.isDesc ? 'Desconto' : 'Provento';
                 const vA = v.vAnt.toFixed(2).replace('.', ',');
                 const vN = v.vNov.toFixed(2).replace('.', ',');
                 const diff = v.diff.toFixed(2).replace('.', ',');
-                
                 csv += `"${v.nome}";${sA};${sN};${dMes};${dsr};"${v.descExata}";${qtdCalc};"${divLinha}";"${tipo}";${vA};${vN};${diff}\n`;
             });
-
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
