@@ -178,12 +178,9 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         const DB_URL = "https://teeste-e33ff-default-rtdb.firebaseio.com/extratos";
 
-        // ==========================================
-        // LISTAS DE FILTRO REFINADAS
-        // (Ordenadas por tamanho para garantir que nomes compostos sejam lidos primeiro)
-        // ==========================================
         const DESCONTOS_PERMITIDOS = [
             "ADIANTAMENTO 13º SALARIO", "ADIANTAMENTO 13O SALARIO", "ADIANTAMENTO 13 SALARIO", "ADIANTAMENTO 13",
+            "ADIANTAMENTO 13º SALÁRIO", "ADIANTAMENTO 13O SALÁRIO", "ADIANTAMENTO 13 SALÁRIO",
             "DESC.ADIANTAMENTO FÉRIAS", "DESC. ADIANTAMENTO FÉRIAS", "DESC. ADIANT. FÉRIAS", "DESC. ADIANTAMENTO FERIAS",
             "DEDUÇÃO SIMPLIFICADA - IRRF NORMAL", "DEDUÇÃO SIMPLIFICADA - IRRF FÉRIAS", "DEDUÇÃO SIMPLIFICADA", "DEDUCAO SIMPLIFICADA",
             "HORAS FALTAS PARCIAL", "DIAS FALTAS DSR", "DIAS FALTAS", "DESCONTO DSR", "HORAS FALTAS DIURNAS", "FALTAS DIURNAS",
@@ -201,15 +198,16 @@
             "SALÁRIO MENSAL", "SALARIO MENSAL", "DIAS NORMAIS", "HORAS EXTRAS", "ADICIONAL NOTURNO",
             "MEDIA HORAS 13º ADIANTADO", "MEDIA VALOR 13º ADIANTADO", "MEDIA HORAS 13O ADIANTADO", "MEDIA VALOR 13O ADIANTADO",
             "MEDIA HORAS 13 ADIANTADO", "MEDIA VALOR 13 ADIANTADO", "13º SALARIO ADIANTADO", "13O SALARIO ADIANTADO", "13 SALARIO ADIANTADO", 
+            "13º SALÁRIO ADIANTADO", "13O SALÁRIO ADIANTADO", "13 SALÁRIO ADIANTADO",
             "MEDIA HORAS 13º", "MEDIA VALOR 13º", "MEDIA HORAS 13O", "MEDIA VALOR 13O", "MEDIA HORAS 13", "MEDIA VALOR 13",
             "13º SALARIO INTEGRAL", "13O SALARIO INTEGRAL", "13 SALARIO INTEGRAL", "13º SALARIO", "13O SALARIO", "13 SALARIO",
+            "13º SALÁRIO INTEGRAL", "13O SALÁRIO INTEGRAL", "13 SALÁRIO INTEGRAL", "13º SALÁRIO", "13O SALÁRIO", "13 SALÁRIO",
             "FGTS FÉRIAS", "FGTS FERIAS", "FGTS"
         ].sort((a, b) => b.length - a.length);
 
         let extratoDB = [];
         let configsGlobais = {}; 
 
-        // --- TELAS ---
         function mostrarDashboard() {
             document.getElementById('view-editor').classList.add('hidden');
             document.getElementById('view-dashboard').classList.remove('hidden');
@@ -225,7 +223,6 @@
             document.getElementById('navStatus').classList.remove('hidden');
         }
 
-        // --- FIREBASE ---
         async function carregarDashboard() {
             document.getElementById('loadingDash').classList.remove('hidden');
             document.getElementById('cardsGrid').classList.add('hidden');
@@ -303,7 +300,6 @@
             }
         }
 
-        // --- EXTRATOR E LÓGICA ---
         const fileInput = document.getElementById('fileInput');
         const dropZone = document.getElementById('dropZone');
         const dropText = document.getElementById('dropText');
@@ -355,6 +351,16 @@
             return num !== null ? num : 0;
         }
 
+        function validarFiltroEstrito(descRaw) {
+            const d = descRaw.toUpperCase().trim();
+            if (d.includes("INSS") || d.includes("IRRF") || d.includes("FGTS") || d.includes("BASE") || d.includes("LÍQUIDO") || d.includes("LIQUIDO")) return { status: 'IGNORAR' };
+            let desc = DESCONTOS_PERMITIDOS.find(v => d.includes(v));
+            if (desc) return { status: 'OK', tipo: 'DESCONTO', nomeMatch: desc };
+            let prov = PROVENTOS_PERMITIDOS.find(v => d.includes(v));
+            if (prov) return { status: 'OK', tipo: 'PROVENTO', nomeMatch: prov };
+            return { status: 'IGNORAR' };
+        }
+
         function definirCategoriaLogica(nomeMatch) {
             const n = nomeMatch;
             if (n.includes("DIAS NORMAIS") || n.includes("HORAS NORMAIS DIURNAS") || n.includes("SALÁRIO MENSAL") || n.includes("SALARIO MENSAL")) return 'BASE';
@@ -363,9 +369,8 @@
             if (n.includes("DIAS FERIAS") || n.includes("DIAS FÉRIAS") || n.includes("HORAS FÉRIAS") || n.includes("HORAS FERIAS")) return 'FERIAS_DIAS';
             if (n.includes("1/3 SOBRE") || n.includes("1/3 DAS")) return 'FERIAS_TERCO';
             
-            if (n.includes("MEDIA") || n.includes("MÉDIA") || n.includes("DIFERENCA DE 1/3") || n.includes("DIFERENÇA DE 1/3") || n.includes("13 SALARIO") || n.includes("13º SALARIO") || n.includes("13O SALARIO") || n.includes("ADIANTAMENTO 13") || n.includes("TEMPO SERVIÇO") || n.includes("TEMPO SERVICO") || n.includes("ANUÊNIO") || n.includes("ANUENIO")) return 'MEDIA_PROP';
+            if (n.includes("MEDIA") || n.includes("MÉDIA") || n.includes("DIFERENCA DE 1/3") || n.includes("DIFERENÇA DE 1/3") || n.includes("13 SALARIO") || n.includes("13º SALARIO") || n.includes("13O SALARIO") || n.includes("13 SALÁRIO") || n.includes("13º SALÁRIO") || n.includes("13O SALÁRIO") || n.includes("ADIANTAMENTO 13") || n.includes("TEMPO SERVIÇO") || n.includes("TEMPO SERVICO") || n.includes("ANUÊNIO") || n.includes("ANUENIO")) return 'MEDIA_PROP';
             
-            // Impostos e Descontos Fixos que ajustam proporcionalmente:
             if (n.includes("FGTS") || n.includes("INSS") || n.includes("IRRF") || n.includes("DEDUÇÃO") || n.includes("DEDUCAO") || n.includes("EMPRÉSTIMO") || n.includes("EMPRESTIMO") || n.includes("DESC.ADIANTAMENTO") || n.includes("DESC. ADIANTAMENTO")) return 'MEDIA_PROP';
             
             if (n.includes("REFLEXO EXTRAS DSR") || n.includes("REFLEXO HORAS ADIC. NOT") || n.includes("REPOUSO REMUNERADO")) return 'DSR_PROV';
@@ -403,7 +408,6 @@
             else extrairMatrizQuestor(lines);
         }
 
-        // --- CÉREBRO DOMINIO (SCANNER INTELIGENTE) ---
         function extrairMatrizDominio(rows) {
             let nomeAtual = "";
             let todasVerbas = [...PROVENTOS_PERMITIDOS, ...DESCONTOS_PERMITIDOS];
@@ -414,7 +418,6 @@
                 let rUpper = Array.isArray(r) ? r.map(c => c ? c.toString().toUpperCase().trim() : "") : Object.values(r).map(c => c ? c.toString().toUpperCase().trim() : "");
                 let rowJoined = rUpper.join(" ");
 
-                // ACHA O NOME
                 if (rowJoined.includes("FUNC:") || rowJoined.includes("FUNC :") || rowJoined.includes("EMPR.:") || rowJoined.includes("FUNCIONÁRIO:") || rowJoined.includes("EMPREGADO:")) {
                     let marker = "FUNC:";
                     if (rowJoined.includes("FUNC :")) marker = "FUNC :";
@@ -433,7 +436,6 @@
 
                 if (!nomeAtual || rowJoined.includes("LÍQUIDO:")) continue;
 
-                // ACHA O SALÁRIO
                 if (rowJoined.includes("SALÁRIO:") || rowJoined.includes("SALARIO:") || rowJoined.includes("SALÁRIO BASE:")) {
                     let marker = rowJoined.includes("SALÁRIO BASE:") ? "SALÁRIO BASE:" : (rowJoined.includes("SALÁRIO:") ? "SALÁRIO:" : "SALARIO:");
                     let parts = rowJoined.split(marker);
@@ -457,7 +459,6 @@
                     continue;
                 }
 
-                // ACHA AS VERBAS (Olhando a linha atual + as duas de baixo)
                 let textToSearch = rowJoined;
                 for(let nextR = 1; nextR <= 2; nextR++) {
                     if (i + nextR < rows.length) {
@@ -504,7 +505,7 @@
                                     });
                                 }
                                 
-                                textToSearch = textToSearch.replace(match[0], ""); // Previne duplicidade
+                                textToSearch = textToSearch.replace(match[0], ""); 
                             }
                         }
                     }
@@ -512,7 +513,6 @@
             }
         }
 
-        // --- QUESTOR (Formato Leitura P/D Original) ---
         function extrairMatrizQuestor(rows) {
             let nomeAtual = "";
             let todasVerbas = [...PROVENTOS_PERMITIDOS, ...DESCONTOS_PERMITIDOS];
